@@ -3,33 +3,49 @@ package main
 import (
 	"fmt"
 	"gifhelper"
+	"time"
 )
 
 func main() {
 	// now evolve the universe: feel free to adjust the following parameters.
-	numGens := 1000
-	time := 5.00
+	numGens := 100
+	timeStep := 5.00
+	//Declaring A particle
+	A := Species{
+		diffusionRate: 1.0,
+		radius:        5,
+		red:           132,
+		green:         83,
+		blue:          60,
+	}
 
 	// initial Surface (for testing purposes)
 	initialSurface := &Surface{
 		particles: []*Particle{
 			{
-				position: OrderedPair{200000, 200000},
-				radius:   250,
-				red:      132,
-				green:    83,
-				blue:     60,
+				x:       200,
+				y:       200,
+				species: &A,
 			},
 		},
-		width: 400000,
+		width: 400,
 	}
+	for i := 0; i < 10; i++ {
+		p := Particle{
+			x:       200,
+			y:       200,
+			species: &A,
+		}
+		initialSurface.particles = append(initialSurface.particles, &p)
+	}
+	start := time.Now()
+	timePoints := SimulateSurface(initialSurface, numGens, timeStep)
+	elapse := time.Since(start)
 
-	timePoints := SimulateSurface(initialSurface, numGens, time)
-
-	fmt.Println("Simulation run. Now drawing images.")
+	fmt.Println("Simulation took", elapse, "s. Now drawing images.")
 	canvasWidth := 1000
-	frequency := 1000
-	scalingFactor := 15.0
+	frequency := 1
+	scalingFactor := 3.0
 	imageList := AnimateSystem(timePoints, canvasWidth, frequency, scalingFactor)
 
 	fmt.Println("Images drawn. Now generating GIF.")
