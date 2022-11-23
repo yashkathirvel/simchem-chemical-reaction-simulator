@@ -2,13 +2,13 @@ package main
 
 import "fmt"
 
-func SimulateSurface(initialS *Surface, numGens int, time float64) []*Surface {
+func SimulateSurface(initialS *Surface, numGens int, timeStep float64) []*Surface {
 	timePoints := make([]*Surface, numGens)
 	// set the initial Surface object as the first time point
 	timePoints[0] = initialS
 	// iterate through numGens generations and update the Surface object each time.
 	for i := 1; i < numGens; i++ {
-		timePoints[i] = timePoints[i-1].Update(time)
+		timePoints[i] = timePoints[i-1].Update(timeStep)
 		fmt.Println("Generation: ", i)
 	}
 	return timePoints
@@ -16,9 +16,10 @@ func SimulateSurface(initialS *Surface, numGens int, time float64) []*Surface {
 
 // Surface method: Update()
 // Updates the Surface object given a time step.
-func (s *Surface) Update(time float64) *Surface {
+func (s *Surface) Update(timeStep float64) *Surface {
 	// create a copy of the current Surface object
 	newS := s.Copy()
+	newS.Diffuse(timeStep)
 	// update the position of each particle
 	// for _, p := range newS.particles {
 	// 	p.UpdatePosition(time)
@@ -36,11 +37,9 @@ func (s *Surface) Copy() *Surface {
 	// iterate through the particles on the surface
 	for _, particle := range s.particles {
 		newParticle := &Particle{
-			position: OrderedPair{particle.position.x, particle.position.y},
-			radius:   particle.radius,
-			red:      particle.red,
-			green:    particle.green,
-			blue:     particle.blue,
+			x:       particle.x,
+			y:       particle.y,
+			species: particle.species,
 		}
 		// append the new particle to the new surface
 		newS.particles = append(newS.particles, newParticle)
