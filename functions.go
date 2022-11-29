@@ -25,9 +25,9 @@ func (s *Surface) Update(time float64, rate float64) *Surface {
 	// create a copy of the current Surface object
 	newS := s.Copy()
 	// update the position of each particle
-	for _, p := range newS.particles {
-	 	p = ZerothUpdatePosition(p,rate)
-	}
+	// for _, p := range newS.particles {
+	// 	p = ZerothUpdatePosition(p,rate)
+	// }
 	return newS
 }
 
