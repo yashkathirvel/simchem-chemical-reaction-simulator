@@ -48,13 +48,13 @@ func (s *Surface) DrawToCanvas(canvasWidth int, scalingFactor float64) image.Ima
 
 	// range over all the bodies and draw them.
 	for _, b := range s.particles {
-		c.SetFillColor(canvas.MakeColor(b.red, b.green, b.blue))
-		cx := (b.position.x / s.width) * float64(canvasWidth)
-		cy := (b.position.y / s.width) * float64(canvasWidth)
-		r := scalingFactor * (b.radius / s.width) * float64(canvasWidth)
+		c.SetFillColor(canvas.MakeColor(b.species.red, b.species.green, b.species.blue))
+		cx := (b.x / s.width) * float64(canvasWidth) //
+		cy := (b.y / s.width) * float64(canvasWidth)
+		r := scalingFactor * (b.species.radius / s.width) * float64(canvasWidth)
 		c.Circle(cx, cy, r)
 		c.Fill()
 	}
 	// we want to return an image!
-	return c.GetImage()
+	return canvas.GetImage(c)
 }
