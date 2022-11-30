@@ -21,11 +21,18 @@ func SimulateSurface(initialS *Surface, numGens int, timeStep float64) []*Surfac
 func (s *Surface) Update(timeStep float64, rate float64) *Surface {
 	// create a copy of the current Surface object
 	newS := s.Copy()
-	newS.Diffuse(timeStep)
+
+	// iterate through the particles on the surface
+	for _, particle := range newS.particles {
+		// diffuse the particle
+		particle.Diffuse(timeStep)
+	}
+	// zeroth order stuff (keep commented for now)
 	// update the position of each particle
 	// for _, p := range newS.particles {
 	// 	p = ZerothUpdatePosition(p,rate)
 	// }
+
 	return newS
 }
 
@@ -37,7 +44,9 @@ func (s *Surface) Update(timeStep float64, rate float64) *Surface {
 // updates position based simply on rate constant, with no relation to other particles
 // in the system
 // func ZerothUpdatePosition(p Particle, rateConstant float64) OrderedPair {
-// 	var pos OrderedPair // initializes new position
+// 	// initializes new position
+// 	var pos OrderedPair
+
 // 	std := math.Sqrt(2 * time * rateConstant)
 
 // 	if rateConstant > 1 {
@@ -49,6 +58,7 @@ func (s *Surface) Update(timeStep float64, rate float64) *Surface {
 // 		newParticle.y += dy
 // 		return newParticle
 // 	}
+// }
 
 // 	dx := generatorX.NormFloat64() * std
 // 	dy := generatorY.NormFloat64() * std
@@ -58,20 +68,17 @@ func (s *Surface) Update(timeStep float64, rate float64) *Surface {
 // 	return pos
 // }
 
-// // particle method: Copy
-// // creates a deep copy of the particle object at hand
-// func (s *Particle) Copy() *Particle {
-// 	// create new address for newP
-// 	var newP Particle
-
-// 	newP.position = s.position
-// 	newP.radius = s.radius
-// 	newP.red = s.red
-// 	newP.green = s.green
-// 	newP.blue = s.blue
-
-// 	return &newP
-// }
+// Particle method: Copy{}
+// Creates a deep copy of the particle object.
+func (s *Particle) Copy() *Particle {
+	// create new address for newP
+	var newP Particle
+	// copy the position and species of the particle
+	newP.position.x = s.position.x
+	newP.position.y = s.position.y
+	newP.species = s.species
+	return &newP
+}
 
 // Surface method: Copy()
 // Creates a deep copy of the Surface object.
