@@ -8,7 +8,6 @@ import (
 
 // calling BrownianMotion() to all particles in parallel
 func (s *Surface) Diffuse(timeStep float64) {
-
 	for _, p := range s.particles {
 		//allocate a new PRNG object for every object
 		sourceX := rand.NewSource(time.Now().UnixNano())
@@ -26,7 +25,7 @@ func (p *Particle) BrownianMotion(generatorX, generatorY *(rand.Rand), timeStep 
 	std := math.Sqrt(2 * timeStep * p.species.diffusionRate)
 	dx := generatorX.NormFloat64() * std
 	dy := generatorY.NormFloat64() * std
-	p.x += dx
-	p.y += dy
+	p.position.x += dx
+	p.position.y += dy
 	//probably need to handle off boundary senario
 }

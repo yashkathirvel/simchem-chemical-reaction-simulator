@@ -13,7 +13,7 @@ func main() {
 	//Declaring A particle
 	A := Species{
 		diffusionRate: 1.0,
-		radius:        5,
+		radius:        1,
 		red:           132,
 		green:         83,
 		blue:          60,
@@ -23,18 +23,16 @@ func main() {
 	initialSurface := &Surface{
 		particles: []*Particle{
 			{
-				x:       200,
-				y:       200,
-				species: &A,
+				position: OrderedPair{200, 200},
+				species:  &A,
 			},
 		},
 		width: 400,
 	}
 	for i := 0; i < 10; i++ {
 		p := Particle{
-			x:       200,
-			y:       200,
-			species: &A,
+			position: OrderedPair{200, 200},
+			species:  &A,
 		}
 		initialSurface.particles = append(initialSurface.particles, &p)
 	}
