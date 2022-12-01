@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"math"
+	"math/rand"
+	"time"
 )
 
 func SimulateSurface(initialS *Surface, numGens int, timeStep float64) []*Surface {
@@ -19,7 +21,7 @@ func SimulateSurface(initialS *Surface, numGens int, timeStep float64) []*Surfac
 
 // Surface method: Update()
 // Updates the Surface object given a time s
-func (s *Surface) Update(timeStep float64, rate float64) *Surface {
+func (s *Surface) Update(timeStep float64, rateConstant float64) *Surface {
 	// create a copy of the current Surface object
 	newS := s.Copy()
 
@@ -27,7 +29,7 @@ func (s *Surface) Update(timeStep float64, rate float64) *Surface {
 	for _, particle := range newS.particles {
 		// diffuse the particle
 		particle.Diffuse(timeStep)
-		particle.ZerothOrderUpdate(rate)
+		particle.ZerothOrderUpdate(timeStep, rateConstant)
 	}
 
 	// zeroth order stuff (keep commented for now)
@@ -46,11 +48,18 @@ func (s *Surface) Update(timeStep float64, rate float64) *Surface {
 // zeroth update position takes a particle and the underlying rate constant
 // updates position based simply on rate constant, with no relation to other particles
 // in the system
-func ZerothUpdatePosition(p Particle, rateConstant float64) OrderedPair {
+func (p *Particle) ZerothUpdatePosition(timeStep, rateConstant float64) OrderedPair {
 	// initializes new position
 	var pos OrderedPair
 
-	std := math.Sqrt(2 * time * rateConstant)
+	std := math.Sqrt(2 * timeStep * rateConstant)
+
+	//allocate a new PRNG objec for every object
+	sourceX := rand.NewSource(time.Now().UnixNano())
+	generatorX := rand.New(sourceX)
+	time.Sleep(time.Nanosecond) //To generate a different PRNG
+	sourceY := rand.NewSource(time.Now().UnixNano())
+	generatorY := rand.New(sourceY)
 
 	if rateConstant > 1 {
 		// updates position based on rate constant
@@ -99,4 +108,22 @@ func (s *Surface) Copy() *Surface {
 		newS.particles = append(newS.particles, newParticle)
 	}
 	return &newS
+}
+
+// Particle method: SurfaceReaction()
+func (p *Particle) SurfaceReaction(width float64) {
+	if p.position.x > width {
+		p.position.x = p.position.x - (p.position.x - width)
+	} else {
+		if p.position.x < 0 {
+		p.position.x = width - (p.position.x *(width/p.position.x))
+	}
+
+	if p.position.y > width{
+		p.position.y = p.position.y - (p.position.y - width)
+	} else {
+		if p.position.y < 0 {
+		p.position.y = width - (p.position.y *(width/p.position.y))
+	}
+}
 }
