@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 )
 
 func SimulateSurface(initialS *Surface, numGens int, timeStep float64) []*Surface {
@@ -26,7 +27,9 @@ func (s *Surface) Update(timeStep float64, rate float64) *Surface {
 	for _, particle := range newS.particles {
 		// diffuse the particle
 		particle.Diffuse(timeStep)
+		particle.ZerothOrderUpdate(rate)
 	}
+
 	// zeroth order stuff (keep commented for now)
 	// update the position of each particle
 	// for _, p := range newS.particles {
@@ -43,30 +46,29 @@ func (s *Surface) Update(timeStep float64, rate float64) *Surface {
 // zeroth update position takes a particle and the underlying rate constant
 // updates position based simply on rate constant, with no relation to other particles
 // in the system
-// func ZerothUpdatePosition(p Particle, rateConstant float64) OrderedPair {
-// 	// initializes new position
-// 	var pos OrderedPair
+func ZerothUpdatePosition(p Particle, rateConstant float64) OrderedPair {
+	// initializes new position
+	var pos OrderedPair
 
-// 	std := math.Sqrt(2 * time * rateConstant)
+	std := math.Sqrt(2 * time * rateConstant)
 
-// 	if rateConstant > 1 {
-// 		// updates position based on rate constant
-// 		newParticle := p.CopyParticle
-// 		dx := generatorX.NormFloat64() * std
-// 		dy := generatorY.NormFloat64() * std
-// 		newParticle.x += dx
-// 		newParticle.y += dy
-// 		return newParticle
-// 	}
-// }
+	if rateConstant > 1 {
+		// updates position based on rate constant
+		newParticle := p.Copy()
+		dx := generatorX.NormFloat64() * std
+		dy := generatorY.NormFloat64() * std
+		newParticle.x += dx
+		newParticle.y += dy
+		return newParticle
+	}
 
-// 	dx := generatorX.NormFloat64() * std
-// 	dy := generatorY.NormFloat64() * std
-// 	pos.x += dx
-// 	pos.y += dy
+	dx := generatorX.NormFloat64() * std
+	dy := generatorY.NormFloat64() * std
+	pos.x += dx
+	pos.y += dy
 
-// 	return pos
-// }
+	return pos
+}
 
 // Particle method: Copy{}
 // Creates a deep copy of the particle object.
