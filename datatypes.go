@@ -1,5 +1,7 @@
 package main
 
+const rateConstant float64 = 1.0
+
 type Particle struct {
 	position OrderedPair
 	species  *Species // pointer to the type of species
