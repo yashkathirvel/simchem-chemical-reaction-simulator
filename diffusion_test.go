@@ -43,14 +43,13 @@ func TestDiffuse(t *testing.T) {
 		blue:          60,
 	}
 	particle := Particle{
-		x:       200,
-		y:       200,
-		species: &A,
+		position: OrderedPair{200, 200},
+		species:  &A,
 	}
 
 	var s Surface
 	s.particles = append(s.particles, &particle)
 	s.Diffuse(1.00)
-	fmt.Print(s.particles[0].x)
-	fmt.Print(s.particles[0].y)
+	fmt.Print(s.particles[0].position.x)
+	fmt.Print(s.particles[0].position.y)
 }
