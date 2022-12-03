@@ -16,7 +16,10 @@ type Species struct { // every type of particles should have uniform following p
 
 type Surface struct {
 	width     float64
-	particles []*Particle
+	//particles []*Particle
+	A_particles []*Particle
+	B_particles []*Particle
+	C_particles []*Particle
 }
 
 type OrderedPair struct {

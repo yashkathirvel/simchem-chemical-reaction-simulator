@@ -2,7 +2,7 @@ package main
 
 import (
 	"canvas"
-	"fmt"
+	//"fmt"
 	"image"
 )
 
@@ -24,7 +24,7 @@ func AnimateSystem(timePoints []*Surface, canvasWidth, frequency int, scalingFac
 			// fmt.Println(i)
 			images = append(images, timePoints[i].DrawToCanvas(canvasWidth, scalingFactor))
 		}
-		fmt.Println("Frame:", i)
+		//fmt.Println("Frame:", i)
 	}
 
 	return images
@@ -46,8 +46,16 @@ func (s *Surface) DrawToCanvas(canvasWidth int, scalingFactor float64) image.Ima
 	c.ClearRect(0, 0, canvasWidth, canvasWidth)
 	c.Fill()
 
-	// range over all the bodies and draw them.
-	for _, b := range s.particles {
+	// range over all the particles and draw them.
+	for _, a := range s.A_particles {
+		c.SetFillColor(canvas.MakeColor(a.species.red, a.species.green, a.species.blue))
+		cx := (a.position.x / s.width) * float64(canvasWidth) //
+		cy := (a.position.y / s.width) * float64(canvasWidth)
+		r := scalingFactor * (a.species.radius / s.width) * float64(canvasWidth)
+		c.Circle(cx, cy, r)
+		c.Fill()
+	}
+	for _, b := range s.B_particles {
 		c.SetFillColor(canvas.MakeColor(b.species.red, b.species.green, b.species.blue))
 		cx := (b.position.x / s.width) * float64(canvasWidth) //
 		cy := (b.position.y / s.width) * float64(canvasWidth)
@@ -55,6 +63,15 @@ func (s *Surface) DrawToCanvas(canvasWidth int, scalingFactor float64) image.Ima
 		c.Circle(cx, cy, r)
 		c.Fill()
 	}
+	for _, C := range s.C_particles {
+		c.SetFillColor(canvas.MakeColor(C.species.red, C.species.green, C.species.blue))
+		cx := (C.position.x / s.width) * float64(canvasWidth) //
+		cy := (C.position.y / s.width) * float64(canvasWidth)
+		r := scalingFactor * (C.species.radius / s.width) * float64(canvasWidth)
+		c.Circle(cx, cy, r)
+		c.Fill()
+	}
+
 	// we want to return an image!
-	return c.GetImage()
+	return canvas.GetImage(c)
 }
