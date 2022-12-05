@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-func SimulateSurface(initialS *Surface, numGens int, timeStep, diff_A, diff_B float64) []*Surface {
+func SimulateSurface(initialS *Surface, numGens int, timeStep, diffusion_cons_A, diffusion_cons_B float64) []*Surface {
 	timePoints := make([]*Surface, numGens)
 	// set the initial Surface object as the first time point
 	timePoints[0] = initialS
 	// iterate through numGens generations and update the Surface object each time.
 	for i := 1; i < numGens; i++ {
-		timePoints[i] = timePoints[i-1].Update(timeStep, 0, diff_A,diff_B)
+		timePoints[i] = timePoints[i-1].Update(timeStep, 10.0,diffusion_cons_A, diffusion_cons_B )
 		//fmt.Println("Generation: ", i)
 	}
 	return timePoints
@@ -21,7 +21,7 @@ func SimulateSurface(initialS *Surface, numGens int, timeStep, diff_A, diff_B fl
 
 // Surface method: Update()
 // Updates the Surface object given a time s
-func (s *Surface) Update(timeStep float64, rateConstant, diff_A, diff_B float64) *Surface {
+func (s *Surface) Update(timeStep , rateConstant , diffusion_cons_A, diffusion_cons_B float64) *Surface {
 	// create a copy of the current Surface object
 	newS := s.Copy()
 
@@ -29,12 +29,12 @@ func (s *Surface) Update(timeStep float64, rateConstant, diff_A, diff_B float64)
 	for _, particle := range newS.A_particles {
 		// diffuse the particle
 		particle.Diffuse(timeStep)
-		particle.ZerothUpdatePosition(timeStep, rateConstant)
+	//	particle.ZerothUpdatePosition(timeStep, rateConstant)
 	}
 	for _, particle := range newS.B_particles {
 		// diffuse the particle
 		particle.Diffuse(timeStep)
-		particle.ZerothUpdatePosition(timeStep, rateConstant)
+	//	particle.ZerothUpdatePosition(timeStep, rateConstant)
 
 	}
 	for _, particle := range newS.C_particles {
@@ -43,7 +43,7 @@ func (s *Surface) Update(timeStep float64, rateConstant, diff_A, diff_B float64)
 
 	}
 
- newS.BimolecularReaction(rateConstant, diff_A, diff_B)
+ newS.BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B)
 
 	// zeroth order stuff (keep commented for now)
 	// update the position of each particle
@@ -164,10 +164,10 @@ func (p *Particle) SurfaceReaction(width float64) {
 //this function simulates the bimolecular reaction
 //input: takes the rate constant of the reaction, calculates a binding radius from it which determines how far
 //two species need to be from each other to initiate collision and consequently a chemical reaction
-func (newS *Surface) BimolecularReaction(rateConstant, diffusionrate_A, diffusionrate_B float64) {
+func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {
 	  //kSi = 4πDσb.
-		//binding_radius := rateConstant/ (4*math.Pi*(diffusionrate_A+diffusionrate_B))
-
+		binding_radius := rateConstant/ (4*math.Pi*(diffusion_cons_A+diffusion_cons_B))
+    fmt.Println(binding_radius)
 		C := &Species{
 	 		name:          "C",
 	 		diffusionRate: 1.0,
@@ -181,15 +181,16 @@ func (newS *Surface) BimolecularReaction(rateConstant, diffusionrate_A, diffusio
 		for _, a_particle := range newS.A_particles {
 			for _, b_particle := range newS.B_particles {
 				 particle_dist := Distance(a_particle.position, b_particle.position)
-				 fmt.Println(particle_dist)
-				 if  particle_dist < 20 {
+
+				 if  particle_dist < binding_radius {
 					 new_dist := Average_pos(a_particle.position, b_particle.position)
 					 C_p := Particle{
 					  position: new_dist ,
 					  species:  C, //pointer to a species defined in main
 					}
+					newS.DeleteParticles(a_particle, b_particle)
 				  newS.C_particles = append(newS.C_particles, &C_p)
-          newS.DeleteParticles(a_particle, b_particle)
+
 			 }
 			}
 		}
@@ -213,4 +214,18 @@ func Average_pos(p1, p2 OrderedPair) OrderedPair{
 	dist.y = deltaY
 
 	return dist
+}
+
+func (newS *Surface) DeleteParticles(a , b *Particle){
+	    //range through surface to find the index of the particle
+			for i, particle := range newS.A_particles{
+				if particle == a{
+					newS.A_particles = append(newS.A_particles[:i],newS.A_particles[i+1:]...)
+				}
+			}
+			for i, particle := range newS.B_particles{
+				if particle == b{
+					newS.B_particles = append(newS.B_particles[:i],newS.B_particles[i+1:]...)
+				}
+			}
 }
