@@ -10,13 +10,12 @@ func main() {
 	// evolution parameters
 	numGens := 100
 	timeStep := 5.00
-	diffusion_cons_A := 1.0
-	diffusion_cons_B := 1.0
+
 
 	// construct Species types
 	A := &Species{
 		name:          "A",
-		diffusionRate: 1.0,
+		diffusionRate: 2.0,
 		radius:        1,
 		red:           132,
 		green:         83,
@@ -25,12 +24,15 @@ func main() {
 
 	B := &Species{
 		name:          "B",
-		diffusionRate: 1.0,
+		diffusionRate: 2.0,
 		radius:        1,
 		red:           255,
 		green:         0,
 		blue:          255,
 	}
+
+	diffusion_cons_A := A.diffusionRate
+	diffusion_cons_B := B.diffusionRate
 
 	// initial Surface (for testing purposes)
 	initialSurface := &Surface{
@@ -49,7 +51,7 @@ func main() {
 		width: 400,
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 200; i++ {
 		A_p := Particle{
 			position: OrderedPair{200, 200},
 			species:  A,
@@ -60,7 +62,7 @@ func main() {
 		}
 		initialSurface.A_particles = append(initialSurface.A_particles, &A_p)
     initialSurface.B_particles = append(initialSurface.B_particles, &B_p)
-		
+
 	}
 
 	// DRIVER CODE (DO NOT CHANGE!!)
