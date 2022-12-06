@@ -178,16 +178,6 @@ func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusi
 				}
 				newS.DeleteParticles(a_particle, b_particle)
 				newS.C_particles = append(newS.C_particles, &C_p)
-			} else { // zeroth order reaction
-				rand.Seed(time.Now().UnixNano())
-				if rand.Float64() < zerothRateConstant {
-					newPosition := OrderedPair{a_particle.position.x + binding_radius, a_particle.position.y + binding_radius}
-					newParticle := Particle{
-						position: newPosition,
-						species:  a_particle.species,
-					}
-					newS.A_particles = append(newS.A_particles, &newParticle)
-				}
 			}
 		}
 
@@ -233,13 +223,13 @@ func (s *Surface) DeleteRandomBParticle(i int) {
 	s.B_particles = append(s.B_particles[:i], s.B_particles[i+1:]...)
 }
 
-func (newS *Surface) KillParticles(killRate float64) {
+func (s *Surface) KillParticles(killRate float64) {
 	// initialize global pseudo random generator
-	rand.Seed(time.Now().UnixNano())
+	// rand.Seed(time.Now().UnixNano())
 
-	for i := range newS.B_particles {
+	for i := range s.B_particles {
 		if rand.Float64() < killRate {
-			newS.DeleteRandomBParticle(i)
+			s.DeleteRandomBParticle(i)
 		}
 	}
 }
