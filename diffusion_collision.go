@@ -29,6 +29,44 @@ func (s *Surface) DiffuseCollision(timeStep float64) {
 
 func Collision(p1, p2 *Particle) {
 
+	r := Subtract(p1.position, p2.position)
+	u1Parallel := Projection(p1.velocity, r)
+	u1Perpendicular := Subtract(p1.velocity, u1Parallel)
+
+	u2Parallel := Projection(p2.velocity, r)
+	u2Perpendicular := Subtract(p2.velocity, u2Parallel)
+	u1ParallelTranslated := Subtract(u1Parallel, u2Parallel)
+
+	v1ParallelTranslated := Scale((p1.species.mass-p2.species.mass)/(p1.species.mass+p2.species.mass), u1ParallelTranslated)
+	v1Parallel := Add(v1ParallelTranslated, u2Parallel)
+	v2Parallel := Add(Subtract(u1Parallel, u2Parallel), v1Parallel)
+	v1Perpendicular := u1Perpendicular
+	v2Perpendicular := u2Perpendicular
+	new_v1 := Add(v1Parallel, v1Perpendicular)
+	new_v2 := Add(v2Parallel, v2Perpendicular)
+	p1.velocity = new_v1
+	p2.velocity = new_v2
+}
+
+// vector scaling
+func Scale(n float64, v OrderedPair) OrderedPair {
+	v.x *= n
+	v.y *= n
+	return v
+}
+
+// vector subtraction
+func Subtract(p1, p2 OrderedPair) OrderedPair {
+	p1.x -= p2.x
+	p1.y -= p2.y
+	return p1
+}
+
+// vector subtraction. shouldnt do it to ptr
+func Add(p1, p2 OrderedPair) OrderedPair {
+	p1.x += p2.x
+	p1.y += p2.y
+	return p1
 }
 
 // dot product of two vectors
@@ -36,15 +74,21 @@ func Dot(v1, v2 OrderedPair) float64 {
 	return v1.x*v2.x + v1.y*v2.y
 }
 
-// return v2 projected on v1
+// return v1 projected on v2
 func Projection(v1, v2 OrderedPair) OrderedPair {
-	v2Magnitude := Dot(v1, v2) / Dot(v1, v1)
+	if Dot(v2, v2) != 0 {
+		v1Magnitude := Dot(v1, v2) / Dot(v2, v2)
 
-	v2Transformed := OrderedPair{
-		x: v2Magnitude * v1.x,
-		y: v2Magnitude * v1.y,
+		v2.x *= v1Magnitude
+		v2.y *= v1Magnitude
+		return v2
+	} else {
+		v := OrderedPair{
+			x: 0,
+			y: 0,
+		}
+		return v
 	}
-	return v2Transformed
 }
 
 // seting inital velocity for all particles

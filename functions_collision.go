@@ -12,7 +12,7 @@ func SimulateSurfaceCollision(initialS *Surface, numGens int, timeStep, rateCons
 	// set the initial Surface object as the first time point
 	timePoints[0] = initialS
 	initialS.SetInitialVelocity(timeStep)
-	fmt.Print(initialS.A_particles[0].velocity)
+	fmt.Print(initialS.A_particles[50].velocity)
 	// iterate through numGens generations and update the Surface object each time.
 	for i := 1; i < numGens; i++ {
 		timePoints[i] = timePoints[i-1].UpdateCollision(timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B)
@@ -39,8 +39,8 @@ func (s *Surface) UpdateCollision(timeStep, rateConstant0, rateConstant2, diffus
 
 	// iterate through the particles on the surface
 	newS.DiffuseCollision(timeStep)
-
-	newS.BimolecularReaction(rateConstant2, diffusion_cons_A, diffusion_cons_B)
+	fmt.Println(newS.A_particles[3].velocity)
+	//newS.BimolecularReaction(rateConstant2, diffusion_cons_A, diffusion_cons_B)
 
 	//fmt.Println("survival of A: ", len(newS.A_particles))
 	return newS
@@ -146,6 +146,7 @@ func (newS *Surface) BimolecularReactionCollision(rateConstant, diffusion_cons_A
 				new_dist := Average_pos(a_particle.position, b_particle.position)
 				C_p := Particle{
 					position: new_dist,
+					velocity: b_particle.velocity,
 					species:  C, //pointer to a species defined in main
 				}
 				newS.DeleteParticles(a_particle, b_particle)
