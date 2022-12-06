@@ -7,20 +7,20 @@ import (
 	"time"
 )
 
-func SimulateSurface(initialS *Surface, numGens int, timeStep, diffusion_cons_A, diffusion_cons_B, killRate float64) []*Surface {
+func SimulateSurface(initialS *Surface, numGens int, timeStep, diffusion_cons_A, diffusion_cons_B, killRate, zerothRateConstant float64) []*Surface {
 	timePoints := make([]*Surface, numGens)
 	// set the initial Surface object as the first time point
 	timePoints[0] = initialS
 	// iterate through numGens generations and update the Surface object each time.
 	for i := 1; i < numGens; i++ {
-		timePoints[i] = timePoints[i-1].Update(timeStep, 10.0, diffusion_cons_A, diffusion_cons_B, killRate)
+		timePoints[i] = timePoints[i-1].Update(timeStep, 10.0, diffusion_cons_A, diffusion_cons_B, killRate, zerothRateConstant)
 	}
 	return timePoints
 }
 
 // Surface method: Update()
 // Updates the Surface object given a time s
-func (s *Surface) Update(timeStep, rateConstant, diffusion_cons_A, diffusion_cons_B, killRate float64) *Surface {
+func (s *Surface) Update(timeStep, rateConstant, diffusion_cons_A, diffusion_cons_B, killRate, zerothRateConstant float64) *Surface {
 	// create a copy of the current Surface object
 	newS := s.Copy()
 
