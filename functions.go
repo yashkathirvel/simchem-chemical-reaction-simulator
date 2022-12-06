@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sort"
 	"time"
 )
 
@@ -221,15 +222,22 @@ func (newS *Surface) DeleteParticles(a, b *Particle) {
 func (s *Surface) DeleteRandomBParticle(i int) {
 	//range through surface to find the index of the particle
 	s.B_particles = append(s.B_particles[:i], s.B_particles[i+1:]...)
+	fmt.Print(len(s.B_particles))
 }
 
-func (s *Surface) KillParticles(killRate float64) {
+func (newS *Surface) KillParticles(killRate float64) {
 	// initialize global pseudo random generator
 	// rand.Seed(time.Now().UnixNano())
 
-	for i := range s.B_particles {
+	deathList := make([]int, 0)
+	for i := range newS.B_particles {
+		fmt.Print(len(newS.B_particles))
 		if rand.Float64() < killRate {
-			s.DeleteRandomBParticle(i)
+			deathList = append(deathList, i)
 		}
+	}
+	sort.Sort(sort.Reverse(sort.IntSlice(deathList)))
+	for i := range deathList {
+		newS.DeleteRandomBParticle(deathList[i])
 	}
 }
