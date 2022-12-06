@@ -19,7 +19,7 @@ func (s *Surface) DiffuseCollision(timeStep float64) {
 			if p2 != p1 {
 				d := Distance(p1.position, p2.position)
 				if d <= (p1.species.radius + p2.species.radius) {
-					//Collision(p1, p2)
+					Collision(p1, p2)
 				}
 			}
 		}
@@ -29,6 +29,22 @@ func (s *Surface) DiffuseCollision(timeStep float64) {
 
 func Collision(p1, p2 *Particle) {
 
+}
+
+// dot product of two vectors
+func Dot(v1, v2 OrderedPair) float64 {
+	return v1.x*v2.x + v1.y*v2.y
+}
+
+// return v2 projected on v1
+func Projection(v1, v2 OrderedPair) OrderedPair {
+	v2Magnitude := Dot(v1, v2) / Dot(v1, v1)
+
+	v2Transformed := OrderedPair{
+		x: v2Magnitude * v1.x,
+		y: v2Magnitude * v1.y,
+	}
+	return v2Transformed
 }
 
 // seting inital velocity for all particles
