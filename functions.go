@@ -40,7 +40,8 @@ func (s *Surface) Update(timeStep, rateConstant, diffusion_cons_A, diffusion_con
 		particle.Diffuse(timeStep)
 	}
 
-	newS.BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B, zerothRateConstant)
+	newS.AddAParticles(zerothRateConstant)
+	newS.BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B)
 
 	// kill particles
 	newS.KillParticles(killRate)
@@ -153,7 +154,7 @@ func (p *Particle) SurfaceReaction(width float64) {
 // this function simulates the bimolecular reaction
 // input: takes the rate constant of the reaction, calculates a binding radius from it which determines how far
 // two species need to be from each other to initiate collision and consequently a chemical reaction
-func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B, zerothRateConstant float64) {
+func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {
 	//kSi = 4πDσb.
 	binding_radius := rateConstant / (4 * math.Pi * (diffusion_cons_A + diffusion_cons_B))
 	fmt.Println(binding_radius)
@@ -239,5 +240,29 @@ func (newS *Surface) KillParticles(killRate float64) {
 	sort.Sort(sort.Reverse(sort.IntSlice(deathList)))
 	for i := range deathList {
 		newS.DeleteRandomBParticle(deathList[i])
+	}
+}
+
+func (newS *Surface) AddAParticles(zerothRateConstant float64) {
+	// initialize global pseudo random generator
+	// rand.Seed(time.Now().UnixNano())
+
+	numParticles := int(float64(len(newS.A_particles)) * zerothRateConstant)
+
+	A := &Species{
+		name:          "A",
+		diffusionRate: 2.0,
+		radius:        1,
+		red:           132,
+		green:         83,
+		blue:          60,
+	}
+
+	for i := 0; i < numParticles; i++ {
+		newParticle := Particle{
+			position: OrderedPair{rand.Float64() * newS.width, rand.Float64() * newS.width},
+			species:  A,
+		}
+		newS.A_particles = append(newS.A_particles, &newParticle)
 	}
 }
