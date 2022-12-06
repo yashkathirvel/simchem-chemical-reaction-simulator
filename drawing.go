@@ -2,7 +2,6 @@ package main
 
 import (
 	"canvas"
-	//"fmt"
 	"image"
 )
 
@@ -73,5 +72,5 @@ func (s *Surface) DrawToCanvas(canvasWidth int, scalingFactor float64) image.Ima
 	}
 
 	// we want to return an image!
-	return canvas.GetImage(c)
+	return c.GetImage()
 }

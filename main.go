@@ -11,7 +11,6 @@ func main() {
 	numGens := 100
 	timeStep := 5.00
 
-
 	// construct Species types
 	A := &Species{
 		name:          "A",
@@ -45,7 +44,7 @@ func main() {
 		B_particles: []*Particle{
 			{
 				position: OrderedPair{150, 150},
-				species: B,
+				species:  B,
 			},
 		},
 		width: 400,
@@ -61,13 +60,15 @@ func main() {
 			species:  B,
 		}
 		initialSurface.A_particles = append(initialSurface.A_particles, &A_p)
-    initialSurface.B_particles = append(initialSurface.B_particles, &B_p)
+		initialSurface.B_particles = append(initialSurface.B_particles, &B_p)
 
 	}
 
+	killRate := 0.10
+
 	// DRIVER CODE (DO NOT CHANGE!!)
 	startTime := time.Now()
-	timePoints := SimulateSurface(initialSurface, numGens, timeStep, diffusion_cons_A, diffusion_cons_B)
+	timePoints := SimulateSurface(initialSurface, numGens, timeStep, diffusion_cons_A, diffusion_cons_B, killRate)
 	elapsedTime := time.Since(startTime)
 
 	fmt.Println("Simulation took", elapsedTime, "s. Now drawing images.")
