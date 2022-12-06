@@ -39,7 +39,7 @@ func (s *Surface) Update(timeStep, rateConstant, diffusion_cons_A, diffusion_con
 		particle.Diffuse(timeStep)
 	}
 
-	newS.BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B)
+	newS.BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B, zerothRateConstant)
 
 	// kill particles
 	newS.KillParticles(killRate)
@@ -152,7 +152,7 @@ func (p *Particle) SurfaceReaction(width float64) {
 // this function simulates the bimolecular reaction
 // input: takes the rate constant of the reaction, calculates a binding radius from it which determines how far
 // two species need to be from each other to initiate collision and consequently a chemical reaction
-func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {
+func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B, zerothRateConstant float64) {
 	//kSi = 4πDσb.
 	binding_radius := rateConstant / (4 * math.Pi * (diffusion_cons_A + diffusion_cons_B))
 	fmt.Println(binding_radius)
@@ -179,16 +179,19 @@ func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusi
 				newS.DeleteParticles(a_particle, b_particle)
 				newS.C_particles = append(newS.C_particles, &C_p)
 			} else { // zeroth order reaction
-				newPosition := OrderedPair{a_particle.position.x + binding_radius, a_particle.position.y + binding_radius}
-				newParticle := Particle{
-					position: newPosition,
-					species:  a_particle.species,
+				rand.Seed(time.Now().UnixNano())
+				if rand.Float64() < zerothRateConstant {
+					newPosition := OrderedPair{a_particle.position.x + binding_radius, a_particle.position.y + binding_radius}
+					newParticle := Particle{
+						position: newPosition,
+						species:  a_particle.species,
+					}
+					newS.A_particles = append(newS.A_particles, &newParticle)
 				}
-				newS.A_particles = append(newS.A_particles, &newParticle)
 			}
 		}
-	}
 
+	}
 }
 
 func Distance(p1, p2 OrderedPair) float64 {

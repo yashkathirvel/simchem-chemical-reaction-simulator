@@ -65,10 +65,11 @@ func main() {
 	}
 
 	killRate := 0.10
+	zerothRateConstant := 0.80
 
 	// DRIVER CODE (DO NOT CHANGE!!)
 	startTime := time.Now()
-	timePoints := SimulateSurface(initialSurface, numGens, timeStep, diffusion_cons_A, diffusion_cons_B, killRate)
+	timePoints := SimulateSurface(initialSurface, numGens, timeStep, diffusion_cons_A, diffusion_cons_B, killRate, zerothRateConstant)
 	elapsedTime := time.Since(startTime)
 
 	fmt.Println("Simulation took", elapsedTime, "s. Now drawing images.")
