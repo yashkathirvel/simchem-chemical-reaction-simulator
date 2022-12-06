@@ -7,106 +7,62 @@ import (
 	"time"
 )
 
-func SimulateSurface(initialS *Surface, numGens int, timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B float64) []*Surface {
+func SimulateSurfaceCollision(initialS *Surface, numGens int, timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B float64) []*Surface {
 	timePoints := make([]*Surface, numGens)
 	// set the initial Surface object as the first time point
 	timePoints[0] = initialS
+	initialS.SetInitialVelocity(timeStep)
+	fmt.Print(initialS.A_particles[0].velocity)
 	// iterate through numGens generations and update the Surface object each time.
 	for i := 1; i < numGens; i++ {
-		timePoints[i] = timePoints[i-1].Update(timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B)
+		timePoints[i] = timePoints[i-1].UpdateCollision(timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B)
 		//fmt.Println("Generation: ", i)
 	}
 	return timePoints
 }
 
+func (s *Surface) SetInitialVelocity(timeStep float64) {
+	rand.Seed(time.Now().UnixNano())
+	liveList := append(s.A_particles, s.B_particles...)
+	liveList = append(liveList, s.C_particles...)
+	for _, p := range liveList {
+		p.SetInitialVelocity(timeStep)
+	}
+
+}
+
 // Surface method: Update()
 // Updates the Surface object given a time s
-func (s *Surface) Update(timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B float64) *Surface {
+func (s *Surface) UpdateCollision(timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B float64) *Surface {
 	// create a copy of the current Surface object
-	newS := s.Copy()
+	newS := s.CopyCollision()
 
 	// iterate through the particles on the surface
-	for _, particle := range newS.A_particles {
-		// diffuse the particle
-		particle.Diffuse(timeStep)
-		//	particle.ZerothUpdatePosition(timeStep, rateConstant)
-	}
-	for _, particle := range newS.B_particles {
-		// diffuse the particle
-		particle.Diffuse(timeStep)
-		//	particle.ZerothUpdatePosition(timeStep, rateConstant)
-
-	}
-	for _, particle := range newS.C_particles {
-		// diffuse the particle
-		particle.Diffuse(timeStep)
-
-	}
+	newS.DiffuseCollision(timeStep)
 
 	newS.BimolecularReaction(rateConstant2, diffusion_cons_A, diffusion_cons_B)
 
-	// zeroth order stuff (keep commented for now)
-	// update the position of each particle
-	// for _, p := range newS.particles {
-	// 	p = ZerothUpdatePosition(p,rate)
-	// }
-	fmt.Println("survival of A: ", len(newS.A_particles))
+	//fmt.Println("survival of A: ", len(newS.A_particles))
 	return newS
-}
-
-// in zeroth order reactions, the reaction progresses at a rate that is
-// independent of all chemical concentrations. this means products
-// are formed spontaneously.
-
-// zeroth update position takes a particle and the underlying rate constant
-// updates position based simply on rate constant, with no relation to other particles
-// in the system
-func (p *Particle) ZerothUpdatePosition(timeStep, rateConstant0 float64) {
-	// initializes new position
-	//var pos OrderedPair
-
-	std := math.Sqrt(2 * timeStep * rateConstant0)
-
-	//allocate a new PRNG objec for every object
-	sourceX := rand.NewSource(time.Now().UnixNano())
-	generatorX := rand.New(sourceX)
-	time.Sleep(time.Nanosecond) //To generate a different PRNG
-	sourceY := rand.NewSource(time.Now().UnixNano())
-	generatorY := rand.New(sourceY)
-
-	if rateConstant0 > 1 {
-		// updates position based on rate constant
-		//newParticle := p.Copy()
-		dx := generatorX.NormFloat64() * std
-		dy := generatorY.NormFloat64() * std
-		p.position.x += dx
-		p.position.y += dy
-
-	}
-
-	//	dx := generatorX.NormFloat64() * std
-	//	dy := generatorY.NormFloat64() * std
-	//	pos.x += dx
-	//	pos.y += dy
-
-	//return pos
 }
 
 // Particle method: Copy{}
 // Creates a deep copy of the particle object.
-func (s *Particle) Copy() *Particle {
+func (s *Particle) CopyCollision() *Particle {
 	// create new address for newP
 	var newP Particle
 	// copy the position and species of the particle
 	newP.position.x = s.position.x
 	newP.position.y = s.position.y
+	newP.velocity.x = s.velocity.x
+	newP.velocity.y = s.velocity.y
 	newP.species = s.species
 	return &newP
 }
 
 // Surface method: Copy()
 // Creates a deep copy of the Surface object.
-func (s *Surface) Copy() *Surface {
+func (s *Surface) CopyCollision() *Surface {
 	// create new address for newS
 	var newS Surface
 	newS.A_particles = make([]*Particle, 0)
@@ -117,6 +73,7 @@ func (s *Surface) Copy() *Surface {
 	for _, particle := range s.A_particles {
 		newParticle := &Particle{
 			position: particle.position,
+			velocity: particle.velocity,
 			species:  particle.species,
 		}
 		newS.A_particles = append(newS.A_particles, newParticle)
@@ -124,6 +81,7 @@ func (s *Surface) Copy() *Surface {
 	for _, particle := range s.B_particles {
 		newParticle := &Particle{
 			position: particle.position,
+			velocity: particle.velocity,
 			species:  particle.species,
 		}
 		newS.B_particles = append(newS.B_particles, newParticle)
@@ -131,6 +89,7 @@ func (s *Surface) Copy() *Surface {
 	for _, particle := range s.C_particles {
 		newParticle := &Particle{
 			position: particle.position,
+			velocity: particle.velocity,
 			species:  particle.species,
 		}
 		newS.C_particles = append(newS.C_particles, newParticle)
@@ -143,7 +102,7 @@ func (s *Surface) Copy() *Surface {
 // Particle method: SurfaceReaction(), this method takes into account the interaction of the particles with the surface
 // the simulation is kept simple by defining boundaries, we simulate an inert permeable boundary
 // this function takes the witdth of the surface and reflects particles back into the medium when they hit the surface
-func (p *Particle) SurfaceReaction(width float64) {
+func (p *Particle) SurfaceReactionCollision(width float64) {
 	if p.position.x > width {
 		p.position.x = p.position.x - (p.position.x - width)
 	} else {
@@ -164,7 +123,7 @@ func (p *Particle) SurfaceReaction(width float64) {
 // this function simulates the bimolecular reaction
 // input: takes the rate constant of the reaction, calculates a binding radius from it which determines how far
 // two species need to be from each other to initiate collision and consequently a chemical reaction
-func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {
+func (newS *Surface) BimolecularReactionCollision(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {
 	//kSi = 4πDσb.
 	binding_radius := rateConstant / (4 * math.Pi * (diffusion_cons_A + diffusion_cons_B))
 	//fmt.Println(binding_radius)
@@ -175,6 +134,7 @@ func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusi
 		red:           0,
 		green:         255,
 		blue:          0,
+		mass:          1.0,
 	}
 	//range through a and compare it's distance with the B particles
 	//if the distance between them is less than the binding radius, make C_particles
@@ -195,37 +155,4 @@ func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusi
 		}
 	}
 
-}
-
-func Distance(p1, p2 OrderedPair) float64 {
-	// this is the distance formula from days of precalculus long ago ...
-	deltaX := p1.x - p2.x
-	deltaY := p1.y - p2.y
-	return (math.Sqrt(deltaX*deltaX + deltaY*deltaY))
-}
-
-func Average_pos(p1, p2 OrderedPair) OrderedPair {
-	//calculates avergae of the two positions
-	var dist OrderedPair
-	deltaX := (p1.x + p2.x) / 2
-	deltaY := (p1.y + p2.y) / 2
-
-	dist.x = deltaX
-	dist.y = deltaY
-
-	return dist
-}
-
-func (newS *Surface) DeleteParticles(a, b *Particle) {
-	//range through surface to find the index of the particle
-	for i, particle := range newS.A_particles {
-		if particle == a {
-			newS.A_particles = append(newS.A_particles[:i], newS.A_particles[i+1:]...)
-		}
-	}
-	for i, particle := range newS.B_particles {
-		if particle == b {
-			newS.B_particles = append(newS.B_particles[:i], newS.B_particles[i+1:]...)
-		}
-	}
 }
