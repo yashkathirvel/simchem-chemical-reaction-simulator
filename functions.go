@@ -4,92 +4,95 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sort"
 	"time"
 )
 
-func SimulateSurface(initialS *Surface, numGens int, timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B float64) []*Surface {
+func SimulateSurface(initialS *Surface, numGens int, timeStep, diffusion_cons_A, diffusion_cons_B, killRate, zerothRateConstant, bimolecularRateConstant float64) []*Surface {
 	timePoints := make([]*Surface, numGens)
 	// set the initial Surface object as the first time point
 	timePoints[0] = initialS
 	// iterate through numGens generations and update the Surface object each time.
+	//dataA := make([]int, 0)
+	//dataB := make([]int, 0)
 	for i := 1; i < numGens; i++ {
-		timePoints[i] = timePoints[i-1].Update(timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B)
-		//fmt.Println("Generation: ", i)
+		timePoints[i] = timePoints[i-1].Update(timeStep, bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B, killRate, zerothRateConstant)
+		a := len(timePoints[i].A_particles)
+		b := len(timePoints[i].B_particles)
+		fmt.Println(a, ",", b, ",")
 	}
 	return timePoints
 }
 
 // Surface method: Update()
 // Updates the Surface object given a time s
-func (s *Surface) Update(timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B float64) *Surface {
+func (s *Surface) Update(timeStep, bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B, killRate, zerothRateConstant float64) *Surface {
 	// create a copy of the current Surface object
 	newS := s.Copy()
-
-	// iterate through the particles on the surface
+	rand.Seed(time.Now().UnixNano())
+	// iterate through the particles on the surface and diffuse them
+	Astd := math.Sqrt(2 * timeStep * diffusion_cons_A)
 	for _, particle := range newS.A_particles {
 		// diffuse the particle
-		particle.Diffuse(timeStep)
-		//	particle.ZerothUpdatePosition(timeStep, rateConstant)
+		particle.Diffuse(Astd)
 	}
+	Bstd := math.Sqrt(2 * timeStep * diffusion_cons_B)
 	for _, particle := range newS.B_particles {
 		// diffuse the particle
-		particle.Diffuse(timeStep)
-		//	particle.ZerothUpdatePosition(timeStep, rateConstant)
+		particle.Diffuse(Bstd)
 
 	}
+	/**
 	for _, particle := range newS.C_particles {
 		// diffuse the particle
 		particle.Diffuse(timeStep)
-
-	}
-
-	newS.BimolecularReaction(rateConstant2, diffusion_cons_A, diffusion_cons_B)
-
-	// zeroth order stuff (keep commented for now)
-	// update the position of each particle
-	// for _, p := range newS.particles {
-	// 	p = ZerothUpdatePosition(p,rate)
-	// }
-	fmt.Println("survival of A: ", len(newS.A_particles))
+	}**/
+	newS.LoktaVolterraReaction(bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B)
+	newS.AddAParticles(zerothRateConstant, timeStep)
+	newS.KillParticles(killRate, timeStep)
 	return newS
 }
-
-// in zeroth order reactions, the reaction progresses at a rate that is
-// independent of all chemical concentrations. this means products
-// are formed spontaneously.
-
-// zeroth update position takes a particle and the underlying rate constant
-// updates position based simply on rate constant, with no relation to other particles
-// in the system
-func (p *Particle) ZerothUpdatePosition(timeStep, rateConstant0 float64) {
-	// initializes new position
-	//var pos OrderedPair
-
-	std := math.Sqrt(2 * timeStep * rateConstant0)
-
-	//allocate a new PRNG objec for every object
-	sourceX := rand.NewSource(time.Now().UnixNano())
-	generatorX := rand.New(sourceX)
-	time.Sleep(time.Nanosecond) //To generate a different PRNG
-	sourceY := rand.NewSource(time.Now().UnixNano())
-	generatorY := rand.New(sourceY)
-
-	if rateConstant0 > 1 {
-		// updates position based on rate constant
-		//newParticle := p.Copy()
-		dx := generatorX.NormFloat64() * std
-		dy := generatorY.NormFloat64() * std
-		p.position.x += dx
-		p.position.y += dy
-
+func (newS *Surface) LoktaVolterraReaction(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {
+	//kSi = 4πDσb.
+	binding_radius := rateConstant / (4 * math.Pi * (diffusion_cons_A + diffusion_cons_B))
+	B := &Species{
+		name:          "B",
+		diffusionRate: 100.0,
+		radius:        3,
+		red:           0,
+		green:         0,
+		blue:          255,
+		mass:          1.0,
+	}
+	newB := make([]OrderedPair, 0)
+	//range through a and compare it's distance with the B particles
+	//if the distance between them is less than the binding radius, make C_particles
+	for _, b_particle := range newS.B_particles {
+		for _, a_particle := range newS.A_particles {
+			particle_dist := Distance(a_particle.position, b_particle.position)
+			if particle_dist < binding_radius {
+				new_dist := Average_pos(a_particle.position, b_particle.position)
+				newB = append(newB, new_dist)
+				newS.DeleteParticleA(a_particle)
+			}
+		}
 	}
 
-	//	dx := generatorX.NormFloat64() * std
-	//	dy := generatorY.NormFloat64() * std
-	//	pos.x += dx
-	//	pos.y += dy
-
-	//return pos
+	for _, b_position := range newB {
+		B_p := Particle{
+			position: b_position,
+			species:  B, //pointer to a species defined in main
+		}
+		newS.B_particles = append(newS.B_particles, &B_p)
+	}
+}
+func (newS *Surface) DeleteParticleA(a *Particle) {
+	//range through surface to find the index of the particle
+	for i, particle := range newS.A_particles {
+		if particle == a {
+			newS.A_particles = append(newS.A_particles[:i], newS.A_particles[i+1:]...)
+		}
+	}
 }
 
 // Particle method: Copy{}
@@ -115,28 +118,17 @@ func (s *Surface) Copy() *Surface {
 	newS.width = s.width
 	// iterate through the particles on the surface
 	for _, particle := range s.A_particles {
-		newParticle := &Particle{
-			position: particle.position,
-			species:  particle.species,
-		}
+		newParticle := particle.Copy()
 		newS.A_particles = append(newS.A_particles, newParticle)
 	}
 	for _, particle := range s.B_particles {
-		newParticle := &Particle{
-			position: particle.position,
-			species:  particle.species,
-		}
+		newParticle := particle.Copy()
 		newS.B_particles = append(newS.B_particles, newParticle)
 	}
 	for _, particle := range s.C_particles {
-		newParticle := &Particle{
-			position: particle.position,
-			species:  particle.species,
-		}
+		newParticle := particle.Copy()
 		newS.C_particles = append(newS.C_particles, newParticle)
 	}
-	// append the new particle to the new surface
-
 	return &newS
 }
 
@@ -167,12 +159,12 @@ func (p *Particle) SurfaceReaction(width float64) {
 func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {
 	//kSi = 4πDσb.
 	binding_radius := rateConstant / (4 * math.Pi * (diffusion_cons_A + diffusion_cons_B))
-	//fmt.Println(binding_radius)
+
 	C := &Species{
 		name:          "C",
 		diffusionRate: 1.0,
 		radius:        1,
-		red:           0,
+		red:           255,
 		green:         255,
 		blue:          0,
 	}
@@ -190,11 +182,10 @@ func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusi
 				}
 				newS.DeleteParticles(a_particle, b_particle)
 				newS.C_particles = append(newS.C_particles, &C_p)
-
 			}
 		}
-	}
 
+	}
 }
 
 func Distance(p1, p2 OrderedPair) float64 {
@@ -226,6 +217,56 @@ func (newS *Surface) DeleteParticles(a, b *Particle) {
 	for i, particle := range newS.B_particles {
 		if particle == b {
 			newS.B_particles = append(newS.B_particles[:i], newS.B_particles[i+1:]...)
+		}
+	}
+}
+
+// Surface method: Delete random B particles
+func (s *Surface) DeleteRandomBParticle(i int) {
+	//range through surface to find the index of the particle
+	s.B_particles = append(s.B_particles[:i], s.B_particles[i+1:]...)
+
+}
+
+func (newS *Surface) KillParticles(killRate, timeStep float64) {
+	// initialize global pseudo random generator
+	rand.Seed(time.Now().UnixNano())
+	prob := 1.0 - math.Exp(-killRate*timeStep)
+	deathList := make([]int, 0)
+	for i := range newS.B_particles {
+		if rand.Float64() < prob {
+			deathList = append(deathList, i)
+		}
+	}
+	sort.Sort(sort.Reverse(sort.IntSlice(deathList)))
+	for i := range deathList {
+		newS.DeleteRandomBParticle(deathList[i])
+	}
+}
+
+func (newS *Surface) AddAParticles(zerothRateConstant, timeStep float64) {
+	// initialize global pseudo random generator
+	rand.Seed(time.Now().UnixNano())
+	prob := 1.0 - math.Exp(-zerothRateConstant*timeStep)
+	//numParticles := int(timeStep * zerothRateConstant)
+	A := &Species{
+		name:          "A",
+		diffusionRate: 100.0,
+		radius:        3,
+		red:           255,
+		green:         0,
+		blue:          0,
+		mass:          1.0,
+	}
+
+	for i := 0; i < len(newS.A_particles); i++ {
+		if rand.Float64() < prob {
+
+			newParticle := Particle{
+				position: OrderedPair{rand.Float64() * newS.width, rand.Float64() * newS.width},
+				species:  A,
+			}
+			newS.A_particles = append(newS.A_particles, &newParticle)
 		}
 	}
 }

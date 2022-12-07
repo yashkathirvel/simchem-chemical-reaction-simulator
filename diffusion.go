@@ -1,11 +1,19 @@
 package main
 
 import (
-	"math"
 	"math/rand"
-	"time"
 )
 
+func (p *Particle) Diffuse(std float64) {
+	//allocate a new PRNG objec for every object
+	dx := rand.NormFloat64() * std
+	dy := rand.NormFloat64() * std
+	p.position.x += dx
+	p.position.y += dy
+	//runing too fast that seeds being the same?
+}
+
+/**
 // calling BrownianMotion() to all particles in parallel
 func (p *Particle) Diffuse(timeStep float64) {
 	//allocate a new PRNG objec for every object
@@ -27,6 +35,5 @@ func (p *Particle) BrownianMotion(generator *(rand.Rand), timeStep float64) {
 	//probably need to handle off boundary senario
 }
 
-/**
 
 **/
