@@ -11,22 +11,44 @@ func (s *Surface) DiffuseCollision(timeStep float64) {
 	liveList = append(liveList, s.C_particles...)
 	for _, p := range liveList {
 		p.UpdatePosition(timeStep)
-		p.SurfaceReaction(s.width)
+		p.SurfaceReactionC(s.width)
 	}
-
-	for _, p1 := range liveList {
-		for _, p2 := range liveList {
+	flags := make([]bool, len(liveList)) //each pair just collide for 1 time
+	for i, p1 := range liveList {
+		for j, p2 := range liveList {
 			if p2 != p1 {
 				d := Distance(p1.position, p2.position)
-				if d <= (p1.species.radius + p2.species.radius) {
+				if d <= (p1.species.radius+p2.species.radius) && flags[i] != true && flags[j] != true {
 					Collision(p1, p2)
+					flags[i] = true
+					flags[j] = true
 				}
 			}
 		}
 	}
 
 }
+func (p *Particle) SurfaceReactionC(width float64) {
+	if p.position.x > width {
+		p.position.x = p.position.x - (p.position.x - width)
+		p.velocity.x = -p.velocity.x
+	} else {
+		if p.position.x < 0 {
+			p.position.x = width - (p.position.x * (width / p.position.x))
+			p.velocity.x = -p.velocity.x
+		}
+	}
 
+	if p.position.y > width {
+		p.position.y = p.position.y - (p.position.y - width)
+		p.velocity.y = -p.velocity.y
+	} else {
+		if p.position.y < 0 {
+			p.position.y = width - (p.position.y * (width / p.position.y))
+			p.velocity.y = -p.velocity.y
+		}
+	}
+}
 func Collision(p1, p2 *Particle) {
 
 	r := Subtract(p1.position, p2.position)
@@ -44,8 +66,9 @@ func Collision(p1, p2 *Particle) {
 	v2Perpendicular := u2Perpendicular
 	new_v1 := Add(v1Parallel, v1Perpendicular)
 	new_v2 := Add(v2Parallel, v2Perpendicular)
-	p1.velocity = new_v1
-	p2.velocity = new_v2
+	var v OrderedPair
+	p1.velocity = Subtract(v, new_v1)
+	p2.velocity = Subtract(v, new_v2)
 }
 
 // vector scaling

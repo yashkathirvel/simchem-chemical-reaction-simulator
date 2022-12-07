@@ -18,8 +18,9 @@ func SimulateSurface(initialS *Surface, numGens int, timeStep, diffusion_cons_A,
 	for i := 1; i < numGens; i++ {
 		timePoints[i] = timePoints[i-1].Update(timeStep, bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B, killRate, zerothRateConstant)
 		a := len(timePoints[i].A_particles)
-		b := len(timePoints[i].B_particles)
-		fmt.Println(a, ",", b, ",")
+		//b := len(timePoints[i].B_particles)
+		//fmt.Println(a, ",", b, ",")
+		fmt.Println(a, ",", i, ",")
 	}
 	return timePoints
 }
@@ -47,9 +48,10 @@ func (s *Surface) Update(timeStep, bimolecularRateConstant, diffusion_cons_A, di
 		// diffuse the particle
 		particle.Diffuse(timeStep)
 	}**/
-	newS.LoktaVolterraReaction(bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B)
-	newS.AddAParticles(zerothRateConstant, timeStep)
-	newS.KillParticles(killRate, timeStep)
+	//newS.LoktaVolterraReaction(bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B)
+	//newS.AddAParticles(zerothRateConstant, timeStep)
+	//newS.KillParticles(killRate, timeStep)
+	newS.BimolecularReaction(bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B)
 	return newS
 }
 func (newS *Surface) LoktaVolterraReaction(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {

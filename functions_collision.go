@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -12,7 +11,7 @@ func SimulateSurfaceCollision(initialS *Surface, numGens int, timeStep, rateCons
 	// set the initial Surface object as the first time point
 	timePoints[0] = initialS
 	initialS.SetInitialVelocity(timeStep)
-	fmt.Print(initialS.A_particles[50].velocity)
+	//fmt.Print(initialS.A_particles[50].velocity)
 	// iterate through numGens generations and update the Surface object each time.
 	for i := 1; i < numGens; i++ {
 		timePoints[i] = timePoints[i-1].UpdateCollision(timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B)
@@ -39,8 +38,8 @@ func (s *Surface) UpdateCollision(timeStep, rateConstant0, rateConstant2, diffus
 
 	// iterate through the particles on the surface
 	newS.DiffuseCollision(timeStep)
-	fmt.Println(newS.A_particles[3].velocity)
-	//newS.BimolecularReaction(rateConstant2, diffusion_cons_A, diffusion_cons_B)
+	//fmt.Println(newS.A_particles[3].velocity)
+	newS.BimolecularReaction(rateConstant2, diffusion_cons_A, diffusion_cons_B)
 
 	//fmt.Println("survival of A: ", len(newS.A_particles))
 	return newS
@@ -99,6 +98,7 @@ func (s *Surface) CopyCollision() *Surface {
 	return &newS
 }
 
+/**
 // Particle method: SurfaceReaction(), this method takes into account the interaction of the particles with the surface
 // the simulation is kept simple by defining boundaries, we simulate an inert permeable boundary
 // this function takes the witdth of the surface and reflects particles back into the medium when they hit the surface
@@ -119,7 +119,7 @@ func (p *Particle) SurfaceReactionCollision(width float64) {
 		}
 	}
 }
-
+**/
 // this function simulates the bimolecular reaction
 // input: takes the rate constant of the reaction, calculates a binding radius from it which determines how far
 // two species need to be from each other to initiate collision and consequently a chemical reaction
@@ -129,8 +129,8 @@ func (newS *Surface) BimolecularReactionCollision(rateConstant, diffusion_cons_A
 	//fmt.Println(binding_radius)
 	C := &Species{
 		name:          "C",
-		diffusionRate: 1.0,
-		radius:        1,
+		diffusionRate: 5.0,
+		radius:        3,
 		red:           0,
 		green:         255,
 		blue:          0,
