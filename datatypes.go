@@ -1,5 +1,10 @@
 package main
 
+type Reaction struct {
+	reactants        []*Species
+	products         []*Species
+	reactionConstant float64
+}
 type Particle struct {
 	position OrderedPair
 	velocity OrderedPair
