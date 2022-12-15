@@ -9,11 +9,11 @@ import (
 
 // Read parameters from .txt file
 // return: width, timeStep, generation, species list, reaction list
-func ReadParameters(filename string) (surfaceWidth, timeStep, scalingFactor float64, generation, canvasWidth, frequency int, speciesList map[Species]int, reactionMap map[string][]Reaction) {
+func ReadParameters(filename string) (surfaceWidth, timeStep, scalingFactor float64, generation, canvasWidth, frequency int, speciesList map[*Species]int, reactionMap map[string][]Reaction) {
 	surfaceWidth = 200
 	timeStep = 1.0
 	generation = 10
-	speciesList = make(map[Species]int, 10)
+	speciesList = make(map[*Species]int, 10)
 	speciesMap := make(map[string]*Species, 10)
 	reactionMap = make(map[string][]Reaction, 3)
 	file, err := os.Open(filename + ".txt")
@@ -81,7 +81,7 @@ func ReadParameters(filename string) (surfaceWidth, timeStep, scalingFactor floa
 			// Split the line on the delimiter
 			fields := strings.Split(line, " ")
 			A, num := ReadSpecies(fields)
-			speciesList[A] = num
+			speciesList[&A] = num
 			speciesMap[A.name] = &A
 		}
 		//fmt.Println(speciesMap["A"])
@@ -106,7 +106,7 @@ func ReadParameters(filename string) (surfaceWidth, timeStep, scalingFactor floa
 			line = line[2:]
 			// Split the line on the delimiter
 			fields := strings.Split(line, " ")
-			R := ReadUniReaction(fields, speciesMap)
+			R := ReadBiReaction(fields, speciesMap)
 			reactionMap["bi"] = append(reactionMap["bi"], R)
 		}
 	}

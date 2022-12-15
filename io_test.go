@@ -14,7 +14,7 @@ func TestReadParameters(t *testing.T) {
 	fmt.Println(generation)
 	fmt.Println(frequency)
 	fmt.Println(speciesList)
-	fmt.Println(reactionMap["zeroth"][0].reactants[0].name)
-	fmt.Println(reactionMap["uni"][0].reactants[0].name)
-	fmt.Println(reactionMap["bi"][0].reactants[0].name)
+	//fmt.Println(reactionMap["zeroth"][0].reactants[0].name)
+	//fmt.Println(reactionMap["uni"][0].reactants[0].name)
+	fmt.Println(reactionMap["bi"])
 }

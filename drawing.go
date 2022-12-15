@@ -2,7 +2,6 @@ package main
 
 import (
 	"canvas"
-	"fmt"
 	"image/color"
 	//"fmt"
 	"image"
@@ -52,7 +51,7 @@ func (s *Surface) DrawToCanvas(canvasWidth int, scalingFactor float64) image.Ima
 
 	// create a black background
 	c.SetFillColor(canvas.MakeColor(255, 255, 255))
-	fmt.Println(canvasWidth)
+	//fmt.Println(canvasWidth)
 	c.ClearRect(0, 0, canvasWidth, canvasWidth)
 	c.Fill()
 	for _, particles := range s.molecularMap {

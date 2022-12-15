@@ -2,19 +2,19 @@ Please set surface width, time step, generation of the simulation as well as can
 The parameters should be input as order above and separated by a space after "$" symbol.
 surface-width time-step generation scaling-factor canvas-width frequency
 example: $200.0 1 1 1 1000 1
-$400.0 1 2 1 1000 1
+$400.0 1 10 1 1000 1
 
 Please declare species (i.e. kinds of molecules) that involved in the Simulation.
 If a species don't exist at beginning, please put zero at "initial-number"
 name  radius  mass  diffusion-rate color initial-number
 example: #A 3 1 10 green 100
 example: #B 3 1 10 blue 100
-#A 3 1 10 green 100
-#B 3 1 10 blue 100
+#A 3 1 10 green 40
+#B 3 1 10 blue 40
 
 Please declare reactions you wish to simulate.
 Zeroth order reaction starts with a "z>"; unimolecular starts with a "u>", bimolecular reaction starts with "b>". No space after these prefix.
 if a single molecule vanishes after a reaction, just leave product blank
 u>A A A 2
-b>A B A A 40000
-z>A 2
+b>A B B B 4000
+u>B 2

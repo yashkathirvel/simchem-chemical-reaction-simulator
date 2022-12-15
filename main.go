@@ -13,11 +13,13 @@ func main() {
 	initialSurface := Surface{
 		width: surfaceWidth,
 	}
+	initialSurface.molecularMap = make(map[*Species][]*Particle, len(speciesMap))
 	//fmt.Println("speciesMap:", speciesMap)
 	initialSurface.Initialization(speciesMap)
-	for species := range speciesMap {
+	fmt.Println("The map", len(initialSurface.molecularMap))
+	for species := range initialSurface.molecularMap {
 		fmt.Println("species:", species)
-		fmt.Println("molecularMap", initialSurface.molecularMap[&species])
+		fmt.Println("molecularMap", len(initialSurface.molecularMap[species]))
 	}
 	//good parameters for L-V
 	//killRate := 2.0

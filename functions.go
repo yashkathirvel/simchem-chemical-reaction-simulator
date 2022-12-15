@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"sort"
@@ -16,10 +17,11 @@ func SimulateSurface(initialSurface Surface, numGens int, timeStep float64, reac
 	//dataB := make([]int, 0)
 	for i := 1; i < numGens; i++ {
 		timePoints[i] = timePoints[i-1].Update(timeStep, reactionMap)
-		//a := len(timePoints[i].A_particles)
-		//b := len(timePoints[i].B_particles)
-		//fmt.Println(a, ",", b, ",")
-		//fmt.Println(a, ",", i, ",")
+		time.Sleep(time.Nanosecond)
+		for _, particles := range timePoints[i].molecularMap {
+			fmt.Print(len(particles), ",")
+		}
+		fmt.Println()
 	}
 	return timePoints
 }
@@ -40,22 +42,31 @@ func (s *Surface) Update(timeStep float64, reactionMap map[string][]Reaction) *S
 	//newS.LoktaVolterraReaction(bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B)
 	//newS.AddAParticles(zerothRateConstant, timeStep)
 	//newS.KillParticles(killRate, timeStep)
-	for order, reactions := range reactionMap {
-		if order == "zero" && len(reactions) != 0 { //handling zeroth order, i.e. adding
-			for _, reaction := range reactions {
-				s.ZerothOrder(reaction, timeStep)
-			}
-		}
-		if order == "uni" && len(reactions) != 0 { //handling uni order
-			for _, reaction := range reactions {
-				if len(reaction.products) == 0 {
-					s.KillParticles(reaction, timeStep) //uni that only kills particles
-				} else {
-					s.UnimolecularReaction(reaction, timeStep) //uni that has products
-				}
-			}
+	if reactionMap["zero"] != nil && len(reactionMap["zero"]) != 0 { //handling zeroth order, i.e. adding
+		for _, reaction := range reactionMap["zero"] {
+			newS.ZerothOrder(reaction, timeStep)
 		}
 	}
+	if reactionMap["uni"] != nil && len(reactionMap["uni"]) != 0 { //handling uni order
+		for i, reaction := range reactionMap["uni"] {
+			if len(reaction.products) == 0 {
+				newS.KillParticles(reaction, timeStep) //uni that only kills particles
+			} else {
+				newS.UnimolecularReaction(reaction, timeStep) //uni that has products
+			}
+			fmt.Println("ith uni reaction", i, "reactant0:", len(newS.molecularMap[reaction.reactants[0]]))
+		}
+	}
+	if reactionMap["bi"] != nil && len(reactionMap["bi"]) != 0 { //handling bimolecular order,
+		for i, reaction := range reactionMap["bi"] {
+			newS.BimolecularReaction(reaction)
+			fmt.Println("ith bi reaction", i, "reactant0:", len(newS.molecularMap[reaction.reactants[0]]))
+		}
+	}
+	for _, particles := range newS.molecularMap {
+		fmt.Print(len(particles), ",")
+	}
+	fmt.Println()
 	return newS
 }
 
@@ -257,11 +268,14 @@ func (s *Surface) DeleteRandomParticle(species *Species, i int) {
 
 func (newS *Surface) KillParticles(reaction Reaction, timeStep float64) {
 	// initialize global pseudo random generator
+	time.Sleep(time.Nanosecond)
 	rand.Seed(time.Now().UnixNano())
 	prob := 1.0 - math.Exp(-reaction.reactionConstant*timeStep)
 	deathList := make([]int, 0)
 	for i := range newS.molecularMap[reaction.reactants[0]] {
-		if rand.Float64() < prob {
+		dice := rand.Float64()
+		fmt.Println("dice", dice)
+		if dice < prob {
 			deathList = append(deathList, i)
 		}
 	}
@@ -273,6 +287,7 @@ func (newS *Surface) KillParticles(reaction Reaction, timeStep float64) {
 
 func (newS *Surface) UnimolecularReaction(reaction Reaction, timeStep float64) {
 	// initialize global pseudo random generator
+	time.Sleep(time.Nanosecond)
 	rand.Seed(time.Now().UnixNano())
 	prob := 1.0 - math.Exp(-reaction.reactionConstant*timeStep)
 	//numParticles := int(timeStep * zerothRateConstant)
@@ -285,9 +300,9 @@ func (newS *Surface) UnimolecularReaction(reaction Reaction, timeStep float64) {
 					//position: OrderedPair{rand.Float64() * newS.width, rand.Float64() * newS.width},
 					species: reaction.reactants[j],
 				}
-				newS.DeleteParticle(particle)
 				newS.molecularMap[reaction.reactants[j]] = append(newS.molecularMap[reaction.reactants[j]], &newParticle)
 			}
+			newS.DeleteParticle(particle)
 		}
 	}
 }
