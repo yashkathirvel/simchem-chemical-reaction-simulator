@@ -39,7 +39,7 @@ func (s *Surface) UpdateCollision(timeStep, rateConstant0, rateConstant2, diffus
 	// iterate through the particles on the surface
 	newS.DiffuseCollision(timeStep)
 	//fmt.Println(newS.A_particles[3].velocity)
-	newS.BimolecularReaction(rateConstant2, diffusion_cons_A, diffusion_cons_B)
+	newS.BimolecularReactionCollision(rateConstant2, diffusion_cons_A, diffusion_cons_B)
 
 	//fmt.Println("survival of A: ", len(newS.A_particles))
 	return newS
@@ -131,9 +131,7 @@ func (newS *Surface) BimolecularReactionCollision(rateConstant, diffusion_cons_A
 		name:          "C",
 		diffusionRate: 5.0,
 		radius:        3,
-		red:           0,
-		green:         255,
-		blue:          0,
+		color:         "green",
 		mass:          1.0,
 	}
 	//range through a and compare it's distance with the B particles

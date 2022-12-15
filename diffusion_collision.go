@@ -7,8 +7,11 @@ import (
 
 // Top level function of collision-driven diffusion.
 func (s *Surface) DiffuseCollision(timeStep float64) {
-	liveList := append(s.A_particles, s.B_particles...)
-	liveList = append(liveList, s.C_particles...)
+	liveList := make([]*Particle, 0)
+	for _, particles := range s.molecularMap {
+		liveList = append(liveList, particles...)
+	}
+
 	for _, p := range liveList {
 		p.UpdatePosition(timeStep)
 		p.SurfaceReactionC(s.width)
@@ -26,7 +29,6 @@ func (s *Surface) DiffuseCollision(timeStep float64) {
 			}
 		}
 	}
-
 }
 func (p *Particle) SurfaceReactionC(width float64) {
 	if p.position.x > width {
