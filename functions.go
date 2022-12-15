@@ -1,98 +1,144 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"sort"
 	"time"
 )
 
-func SimulateSurface(initialS *Surface, numGens int, timeStep, diffusion_cons_A, diffusion_cons_B, killRate, zerothRateConstant, bimolecularRateConstant float64) []*Surface {
+func SimulateSurface(initialSurface Surface, numGens int, timeStep float64, reactionMap map[string][]Reaction) []*Surface {
 	timePoints := make([]*Surface, numGens)
 	// set the initial Surface object as the first time point
-	timePoints[0] = initialS
+	timePoints[0] = &initialSurface
 	// iterate through numGens generations and update the Surface object each time.
 	//dataA := make([]int, 0)
 	//dataB := make([]int, 0)
 	for i := 1; i < numGens; i++ {
-		timePoints[i] = timePoints[i-1].Update(timeStep, bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B, killRate, zerothRateConstant)
-		a := len(timePoints[i].A_particles)
+		timePoints[i] = timePoints[i-1].Update(timeStep, reactionMap)
+		//a := len(timePoints[i].A_particles)
 		//b := len(timePoints[i].B_particles)
 		//fmt.Println(a, ",", b, ",")
-		fmt.Println(a, ",", i, ",")
+		//fmt.Println(a, ",", i, ",")
 	}
 	return timePoints
 }
 
 // Surface method: Update()
 // Updates the Surface object given a time s
-func (s *Surface) Update(timeStep, bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B, killRate, zerothRateConstant float64) *Surface {
+func (s *Surface) Update(timeStep float64, reactionMap map[string][]Reaction) *Surface {
 	// create a copy of the current Surface object
 	newS := s.Copy()
 	rand.Seed(time.Now().UnixNano())
 	// iterate through the particles on the surface and diffuse them
-	Astd := math.Sqrt(2 * timeStep * diffusion_cons_A)
-	for _, particle := range newS.A_particles {
-		// diffuse the particle
-		particle.Diffuse(Astd)
+	for _, particles := range newS.molecularMap {
+		for _, p := range particles {
+			p.Diffuse(timeStep)
+		}
 	}
-	Bstd := math.Sqrt(2 * timeStep * diffusion_cons_B)
-	for _, particle := range newS.B_particles {
-		// diffuse the particle
-		particle.Diffuse(Bstd)
 
-	}
-	/**
-	for _, particle := range newS.C_particles {
-		// diffuse the particle
-		particle.Diffuse(timeStep)
-	}**/
 	//newS.LoktaVolterraReaction(bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B)
 	//newS.AddAParticles(zerothRateConstant, timeStep)
 	//newS.KillParticles(killRate, timeStep)
-	newS.BimolecularReaction(bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B)
+	for order, reactions := range reactionMap {
+		if order == "zero" && len(reactions) != 0 { //handling zeroth order, i.e. adding
+			for _, reaction := range reactions {
+				s.ZerothOrder(reaction, timeStep)
+			}
+		}
+		if order == "uni" && len(reactions) != 0 { //handling uni order
+			for _, reaction := range reactions {
+				if len(reaction.products) == 0 {
+					s.KillParticles(reaction, timeStep) //uni that only kills particles
+				} else {
+					s.UnimolecularReaction(reaction, timeStep) //uni that has products
+				}
+			}
+		}
+	}
 	return newS
 }
-func (newS *Surface) LoktaVolterraReaction(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {
-	//kSi = 4πDσb.
-	binding_radius := rateConstant / (4 * math.Pi * (diffusion_cons_A + diffusion_cons_B))
-	B := &Species{
-		name:          "B",
-		diffusionRate: 100.0,
-		radius:        3,
-		red:           0,
-		green:         0,
-		blue:          255,
-		mass:          1.0,
+
+func (newS *Surface) ZerothOrder(reaction Reaction, timeStep float64) {
+	// initialize global pseudo random generator
+	number := reaction.reactionConstant * timeStep
+	//k0dt product molecules are formed during each time step.
+	for i := 0; i < int(number); i++ {
+
+		newParticle := Particle{
+			position: OrderedPair{rand.Float64() * newS.width, rand.Float64() * newS.width},
+			species:  reaction.reactants[0],
+		}
+		newS.molecularMap[newParticle.species] = append(newS.molecularMap[newParticle.species], &newParticle)
 	}
-	newB := make([]OrderedPair, 0)
-	//range through a and compare it's distance with the B particles
-	//if the distance between them is less than the binding radius, make C_particles
-	for _, b_particle := range newS.B_particles {
-		for _, a_particle := range newS.A_particles {
-			particle_dist := Distance(a_particle.position, b_particle.position)
-			if particle_dist < binding_radius {
-				new_dist := Average_pos(a_particle.position, b_particle.position)
-				newB = append(newB, new_dist)
-				newS.DeleteParticleA(a_particle)
+}
+
+/*
+*
+
+	func (newS *Surface) LoktaVolterraReaction(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {
+		//kSi = 4πDσb.
+		binding_radius := rateConstant / (4 * math.Pi * (diffusion_cons_A + diffusion_cons_B))
+		B := &Species{
+			name:          "B",
+			diffusionRate: 100.0,
+			radius:        3,
+			color:         "green",
+		}
+		newB := make([]OrderedPair, 0)
+		//range through a and compare it's distance with the B particles
+		//if the distance between them is less than the binding radius, make C_particles
+		for _, b_particle := range newS.B_particles {
+			for _, a_particle := range newS.A_particles {
+				particle_dist := Distance(a_particle.position, b_particle.position)
+				if particle_dist < binding_radius {
+					new_dist := Average_pos(a_particle.position, b_particle.position)
+					newB = append(newB, new_dist)
+					newS.DeleteParticleA(a_particle)
+				}
+			}
+		}
+
+		for _, b_position := range newB {
+			B_p := Particle{
+				position: b_position,
+				species:  B, //pointer to a species defined in main
+			}
+			newS.B_particles = append(newS.B_particles, &B_p)
+		}
+	}
+
+/*
+*
+
+	func InitializeParticles() {
+		for i := 0; i < 20; i++ {
+			for j := 0; j < 20; j++ {
+				A_p := Particle{
+					//position: OrderedPair{200, 200},
+					species: A,
+				}
+				A_p.position.x = float64(i * 20.0)
+				A_p.position.y = float64(j * 20.0)
+				B_p := Particle{
+					//position: OrderedPair{150, 150},
+					species: B,
+				}
+				B_p.position.x = float64(i*20.0 + 10)
+				B_p.position.y = float64(j*20.0 + 10)
+				initialSurface.A_particles = append(initialSurface.A_particles, &A_p)
+				initialSurface.B_particles = append(initialSurface.B_particles, &B_p)
 			}
 		}
 	}
 
-	for _, b_position := range newB {
-		B_p := Particle{
-			position: b_position,
-			species:  B, //pointer to a species defined in main
-		}
-		newS.B_particles = append(newS.B_particles, &B_p)
-	}
-}
-func (newS *Surface) DeleteParticleA(a *Particle) {
+*
+*/
+func (newS *Surface) DeleteParticle(a *Particle) {
 	//range through surface to find the index of the particle
-	for i, particle := range newS.A_particles {
-		if particle == a {
-			newS.A_particles = append(newS.A_particles[:i], newS.A_particles[i+1:]...)
+	for i := 0; i < len(newS.molecularMap[a.species]); i++ {
+		if newS.molecularMap[a.species][i] == a {
+			newS.molecularMap[a.species] = append(newS.molecularMap[a.species][:i], newS.molecularMap[a.species][i+1:]...)
 		}
 	}
 }
@@ -114,22 +160,14 @@ func (s *Particle) Copy() *Particle {
 func (s *Surface) Copy() *Surface {
 	// create new address for newS
 	var newS Surface
-	newS.A_particles = make([]*Particle, 0)
-	newS.B_particles = make([]*Particle, 0)
-	newS.C_particles = make([]*Particle, 0)
+	newS.molecularMap = make(map[*Species][]*Particle, len(s.molecularMap))
 	newS.width = s.width
 	// iterate through the particles on the surface
-	for _, particle := range s.A_particles {
-		newParticle := particle.Copy()
-		newS.A_particles = append(newS.A_particles, newParticle)
-	}
-	for _, particle := range s.B_particles {
-		newParticle := particle.Copy()
-		newS.B_particles = append(newS.B_particles, newParticle)
-	}
-	for _, particle := range s.C_particles {
-		newParticle := particle.Copy()
-		newS.C_particles = append(newS.C_particles, newParticle)
+	for species, particles := range s.molecularMap {
+		for _, particle := range particles {
+			newParticle := particle.Copy()
+			newS.molecularMap[species] = append(newS.molecularMap[species], newParticle)
+		}
 	}
 	return &newS
 }
@@ -158,35 +196,36 @@ func (p *Particle) SurfaceReaction(width float64) {
 // this function simulates the bimolecular reaction
 // input: takes the rate constant of the reaction, calculates a binding radius from it which determines how far
 // two species need to be from each other to initiate collision and consequently a chemical reaction
-func (newS *Surface) BimolecularReaction(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {
+func (newS *Surface) BimolecularReaction(reaction Reaction) {
 	//kSi = 4πDσb.
-	binding_radius := rateConstant / (4 * math.Pi * (diffusion_cons_A + diffusion_cons_B))
+	binding_radius := reaction.reactionConstant / (4 * math.Pi * (reaction.reactants[0].diffusionRate + reaction.reactants[1].diffusionRate))
 
-	C := &Species{
-		name:          "C",
-		diffusionRate: 1.0,
-		radius:        1,
-		red:           255,
-		green:         255,
-		blue:          0,
-	}
+	reactantA := reaction.reactants[0]
+	reactantB := reaction.reactants[1]
+
+	new_distDictionary := make([]OrderedPair, 0)
 	//range through a and compare it's distance with the B particles
 	//if the distance between them is less than the binding radius, make C_particles
-	for _, a_particle := range newS.A_particles {
-		for _, b_particle := range newS.B_particles {
+	for _, a_particle := range newS.molecularMap[reactantA] {
+		for _, b_particle := range newS.molecularMap[reactantB] {
 			particle_dist := Distance(a_particle.position, b_particle.position)
-
 			if particle_dist < binding_radius {
 				new_dist := Average_pos(a_particle.position, b_particle.position)
-				C_p := Particle{
-					position: new_dist,
-					species:  C, //pointer to a species defined in main
-				}
-				newS.DeleteParticles(a_particle, b_particle)
-				newS.C_particles = append(newS.C_particles, &C_p)
+				new_distDictionary = append(new_distDictionary, new_dist)
+				newS.DeleteParticle(a_particle)
+				newS.DeleteParticle(b_particle)
+				//newS.C_particles = append(newS.C_particles, &C_p)
 			}
 		}
-
+	}
+	for i := range new_distDictionary {
+		for _, product := range reaction.products {
+			product_Particle := Particle{
+				position: new_distDictionary[i],
+				species:  product,
+			}
+			newS.molecularMap[product] = append(newS.molecularMap[product], &product_Particle)
+		}
 	}
 }
 
@@ -209,66 +248,46 @@ func Average_pos(p1, p2 OrderedPair) OrderedPair {
 	return dist
 }
 
-func (newS *Surface) DeleteParticles(a, b *Particle) {
-	//range through surface to find the index of the particle
-	for i, particle := range newS.A_particles {
-		if particle == a {
-			newS.A_particles = append(newS.A_particles[:i], newS.A_particles[i+1:]...)
-		}
-	}
-	for i, particle := range newS.B_particles {
-		if particle == b {
-			newS.B_particles = append(newS.B_particles[:i], newS.B_particles[i+1:]...)
-		}
-	}
-}
-
 // Surface method: Delete random B particles
-func (s *Surface) DeleteRandomBParticle(i int) {
+func (s *Surface) DeleteRandomParticle(species *Species, i int) {
 	//range through surface to find the index of the particle
-	s.B_particles = append(s.B_particles[:i], s.B_particles[i+1:]...)
+	s.molecularMap[species] = append(s.molecularMap[species][:i], s.molecularMap[species][i+1:]...)
 
 }
 
-func (newS *Surface) KillParticles(killRate, timeStep float64) {
+func (newS *Surface) KillParticles(reaction Reaction, timeStep float64) {
 	// initialize global pseudo random generator
 	rand.Seed(time.Now().UnixNano())
-	prob := 1.0 - math.Exp(-killRate*timeStep)
+	prob := 1.0 - math.Exp(-reaction.reactionConstant*timeStep)
 	deathList := make([]int, 0)
-	for i := range newS.B_particles {
+	for i := range newS.molecularMap[reaction.reactants[0]] {
 		if rand.Float64() < prob {
 			deathList = append(deathList, i)
 		}
 	}
 	sort.Sort(sort.Reverse(sort.IntSlice(deathList)))
 	for i := range deathList {
-		newS.DeleteRandomBParticle(deathList[i])
+		newS.DeleteRandomParticle(reaction.reactants[0], deathList[i])
 	}
 }
 
-func (newS *Surface) AddAParticles(zerothRateConstant, timeStep float64) {
+func (newS *Surface) UnimolecularReaction(reaction Reaction, timeStep float64) {
 	// initialize global pseudo random generator
 	rand.Seed(time.Now().UnixNano())
-	prob := 1.0 - math.Exp(-zerothRateConstant*timeStep)
+	prob := 1.0 - math.Exp(-reaction.reactionConstant*timeStep)
 	//numParticles := int(timeStep * zerothRateConstant)
-	A := &Species{
-		name:          "A",
-		diffusionRate: 100.0,
-		radius:        3,
-		red:           255,
-		green:         0,
-		blue:          0,
-		mass:          1.0,
-	}
 
-	for i := 0; i < len(newS.A_particles); i++ {
+	for _, particle := range newS.molecularMap[reaction.reactants[0]] {
 		if rand.Float64() < prob {
-
-			newParticle := Particle{
-				position: OrderedPair{rand.Float64() * newS.width, rand.Float64() * newS.width},
-				species:  A,
+			for j := range reaction.reactants {
+				newParticle := Particle{
+					position: particle.position,
+					//position: OrderedPair{rand.Float64() * newS.width, rand.Float64() * newS.width},
+					species: reaction.reactants[j],
+				}
+				newS.DeleteParticle(particle)
+				newS.molecularMap[reaction.reactants[j]] = append(newS.molecularMap[reaction.reactants[j]], &newParticle)
 			}
-			newS.A_particles = append(newS.A_particles, &newParticle)
 		}
 	}
 }

@@ -12,19 +12,17 @@ type Particle struct {
 }
 
 type Species struct { // every type of particles should have uniform following parameters
-	name             string // A, B or C
-	mass             float64
-	diffusionRate    float64
-	red, green, blue uint8
-	radius           float64
+	name          string // A, B or C
+	radius        float64
+	mass          float64
+	diffusionRate float64
+	color         string
 }
 
 type Surface struct {
 	width float64
 	//particles []*Particle
-	A_particles []*Particle
-	B_particles []*Particle
-	C_particles []*Particle
+	molecularMap map[*Species][]*Particle
 }
 
 type OrderedPair struct {
