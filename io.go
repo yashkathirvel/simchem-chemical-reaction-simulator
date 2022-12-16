@@ -180,7 +180,7 @@ func ReadBiReaction(fields []string, speciesMap map[string]*Species) Reaction {
 	if len(fields) > 3 {
 		AName := fields[0]
 		reaction.reactants = append(reaction.reactants, speciesMap[AName])
-		BName := fields[0]
+		BName := fields[1]
 		reaction.reactants = append(reaction.reactants, speciesMap[BName])
 		for i := 2; i < len(fields)-1; i++ {
 			speciesName := fields[i]

@@ -54,13 +54,13 @@ func (s *Surface) Update(timeStep float64, reactionMap map[string][]Reaction) *S
 			} else {
 				newS.UnimolecularReaction(reaction, timeStep) //uni that has products
 			}
-			fmt.Println("ith uni reaction", i, "reactant0:", len(newS.molecularMap[reaction.reactants[0]]))
+			fmt.Println("ith uni reaction", i, "name", reaction.reactants[0].name, "num", len(newS.molecularMap[reaction.reactants[0]]))
 		}
 	}
 	if reactionMap["bi"] != nil && len(reactionMap["bi"]) != 0 { //handling bimolecular order,
 		for i, reaction := range reactionMap["bi"] {
 			newS.BimolecularReaction(reaction)
-			fmt.Println("ith bi reaction", i, "reactant0:", len(newS.molecularMap[reaction.reactants[0]]))
+			fmt.Println("ith bi reaction", i, "name", reaction.reactants[0].name, "num", len(newS.molecularMap[reaction.reactants[0]]), "name", reaction.reactants[1].name, "num", len(newS.molecularMap[reaction.reactants[1]]))
 		}
 	}
 	for _, particles := range newS.molecularMap {
@@ -220,7 +220,8 @@ func (newS *Surface) BimolecularReaction(reaction Reaction) {
 	for _, a_particle := range newS.molecularMap[reactantA] {
 		for _, b_particle := range newS.molecularMap[reactantB] {
 			particle_dist := Distance(a_particle.position, b_particle.position)
-			if particle_dist < binding_radius {
+			if particle_dist < binding_radius { //reaction happens
+				//location of product to be added
 				new_dist := Average_pos(a_particle.position, b_particle.position)
 				new_distDictionary = append(new_distDictionary, new_dist)
 				newS.DeleteParticle(a_particle)
@@ -229,6 +230,7 @@ func (newS *Surface) BimolecularReaction(reaction Reaction) {
 			}
 		}
 	}
+	fmt.Println("how many bi", len(new_distDictionary))
 	for i := range new_distDictionary {
 		for _, product := range reaction.products {
 			product_Particle := Particle{
@@ -266,6 +268,7 @@ func (s *Surface) DeleteRandomParticle(species *Species, i int) {
 
 }
 
+// i.e. unimolecular reaction that removes 1 species
 func (newS *Surface) KillParticles(reaction Reaction, timeStep float64) {
 	// initialize global pseudo random generator
 	time.Sleep(time.Nanosecond)
@@ -274,7 +277,7 @@ func (newS *Surface) KillParticles(reaction Reaction, timeStep float64) {
 	deathList := make([]int, 0)
 	for i := range newS.molecularMap[reaction.reactants[0]] {
 		dice := rand.Float64()
-		fmt.Println("dice", dice)
+		//fmt.Println("prob", prob)
 		if dice < prob {
 			deathList = append(deathList, i)
 		}
@@ -294,13 +297,13 @@ func (newS *Surface) UnimolecularReaction(reaction Reaction, timeStep float64) {
 
 	for _, particle := range newS.molecularMap[reaction.reactants[0]] {
 		if rand.Float64() < prob {
-			for j := range reaction.reactants {
+			for _, species := range reaction.products {
 				newParticle := Particle{
 					position: particle.position,
 					//position: OrderedPair{rand.Float64() * newS.width, rand.Float64() * newS.width},
-					species: reaction.reactants[j],
+					species: species,
 				}
-				newS.molecularMap[reaction.reactants[j]] = append(newS.molecularMap[reaction.reactants[j]], &newParticle)
+				newS.molecularMap[species] = append(newS.molecularMap[species], &newParticle)
 			}
 			newS.DeleteParticle(particle)
 		}
