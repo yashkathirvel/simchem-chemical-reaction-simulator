@@ -121,7 +121,7 @@ func ReadParameters(filename string) (surfaceWidth, timeStep, scalingFactor floa
 	return surfaceWidth, timeStep, scalingFactor, generation, canvasWidth, frequency, speciesList, reactionMap
 }
 
-// Order: Name, Diffusion rate,
+// Order: name  radius  mass  diffusion-rate color initial-number
 func ReadSpecies(fields []string) (A Species, num int) {
 	var err error
 	A.name = fields[0]
@@ -129,13 +129,13 @@ func ReadSpecies(fields []string) (A Species, num int) {
 	if err != nil {
 		panic("radius of molecule is not a float64")
 	}
-	A.diffusionRate, err = strconv.ParseFloat(fields[2], 64)
-	if err != nil {
-		panic("diffusion rate of molecule is not a float64")
-	}
-	A.mass, err = strconv.ParseFloat(fields[3], 64)
+	A.mass, err = strconv.ParseFloat(fields[2], 64)
 	if err != nil {
 		panic("mass of molecule is not a float64")
+	}
+	A.diffusionRate, err = strconv.ParseFloat(fields[3], 64)
+	if err != nil {
+		panic("diffusionRate is not a float64")
 	}
 	A.color = fields[4]
 	num, err = strconv.Atoi(fields[5])

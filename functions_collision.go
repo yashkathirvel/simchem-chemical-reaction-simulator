@@ -1,25 +1,17 @@
 package main
 
-import (
-	"math"
-	"math/rand"
-	"time"
-)
+func SimulateSurfaceCollision(timePoints []*Surface, numGens int, timeStep float64, reactionMap map[string][]Reaction) []*Surface {
 
-func SimulateSurfaceCollision(initialS *Surface, numGens int, timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B float64) []*Surface {
-	timePoints := make([]*Surface, numGens)
-	// set the initial Surface object as the first time point
-	timePoints[0] = initialS
-	initialS.SetInitialVelocity(timeStep)
 	//fmt.Print(initialS.A_particles[50].velocity)
 	// iterate through numGens generations and update the Surface object each time.
-	for i := 1; i < numGens; i++ {
-		timePoints[i] = timePoints[i-1].UpdateCollision(timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B)
-		//fmt.Println("Generation: ", i)
-	}
+	//for i := 1; i < numGens; i++ {
+	//timePoints[i] = timePoints[i-1].UpdateCollision(timeStep, rateConstant0, rateConstant2, diffusion_cons_A, diffusion_cons_B)
+	//fmt.Println("Generation: ", i)
+	//}
 	return timePoints
 }
 
+/**
 func (s *Surface) SetInitialVelocity(timeStep float64) {
 	rand.Seed(time.Now().UnixNano())
 	liveList := append(s.A_particles, s.B_particles...)
@@ -98,28 +90,6 @@ func (s *Surface) CopyCollision() *Surface {
 	return &newS
 }
 
-/**
-// Particle method: SurfaceReaction(), this method takes into account the interaction of the particles with the surface
-// the simulation is kept simple by defining boundaries, we simulate an inert permeable boundary
-// this function takes the witdth of the surface and reflects particles back into the medium when they hit the surface
-func (p *Particle) SurfaceReactionCollision(width float64) {
-	if p.position.x > width {
-		p.position.x = p.position.x - (p.position.x - width)
-	} else {
-		if p.position.x < 0 {
-			p.position.x = width - (p.position.x * (width / p.position.x))
-		}
-	}
-
-	if p.position.y > width {
-		p.position.y = p.position.y - (p.position.y - width)
-	} else {
-		if p.position.y < 0 {
-			p.position.y = width - (p.position.y * (width / p.position.y))
-		}
-	}
-}
-**/
 // this function simulates the bimolecular reaction
 // input: takes the rate constant of the reaction, calculates a binding radius from it which determines how far
 // two species need to be from each other to initiate collision and consequently a chemical reaction
@@ -155,3 +125,4 @@ func (newS *Surface) BimolecularReactionCollision(rateConstant, diffusion_cons_A
 	}
 
 }
+**/
