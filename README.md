@@ -1,20 +1,20 @@
 # simchem-chemical-reaction-simulator
 This is the code repository for the chemical reaction simulator. The goal of this project is to implement a visualization of Andrew’s stochastic simulation of chemical reactions with spatial resolution and single molecule detail.
 
-## usage 
+## usage
 
 An example of sample input can be found at sample.txt.
 
-To run a simulation of particle, creat a .txt file that describe the whole simulation. 
+To run a simulation of particle, creat a .txt file that describe the whole simulation.
 Please set surface width, time step, generation of the simulation as well as canvas width, scaling factor, and sampling frequency of the gif.
 The parameters should be input as order above and separated by a space after "$" symbol.
 surface-width time-step generation scaling-factor canvas-width frequency
 example: $200.0 1 1 1 1000 1
 $400.0 0.01 2000 1 1000 100
 
-Please declare species (i.e. kinds of molecules) that involved in the Simulation.
+Please declare species (i.e. kinds of molecules) that involved in the simulation after "#".
 Avaliable colors: red,blue,green,yellow,pink,cyan
-If a species don't exist at beginning, please put zero at "initial-number"
+If a species don't exist at beginning, please put zero at "initial-number".
 name  radius  mass  diffusion-rate color initial-number
 example: #A 3 1 500 red 100
 example: #B 3 1 500 blue 100
@@ -33,9 +33,12 @@ b>A B B B 30000
 The unit of parameter is not restricted. Units in sample.txt are nanometer and second.
 
 From go/src, run "./go build" from command line.
-Then run "./simchem-chemical-reaction-simulator input output" from command line. input is the name of file contains you designated parameters(no .txt suffix needed), 
+Then run "./simchem-chemical-reaction-simulator input output" from command line. input is the name of file contains you designated parameters(no .txt suffix needed),
 And output should be the name of generated .gif file.
+You can also run collision-driven simulation by adding a -c flag to the 4th argument.
 
 example: ./simchem-chemical-reaction-simulator sample lotvol
+example: ./simchem-chemical-reaction-simulator ab acid-base -c
+
 
 This will return a given simulation for a chemical reaction.

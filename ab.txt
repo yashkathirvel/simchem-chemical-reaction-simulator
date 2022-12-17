@@ -1,16 +1,15 @@
-This is a demostration of acid-base reaction.
-Parameters are provided by Steve Andreas.
-units in this demo are in nanometers and second
+This is a demostration of H and OH ions' acid-base reaction.
+Parameters are provided by Steve Andrews.
+units in this demo are in nanometers and second.
 
 $100.0 0.002 10 1 1000 1
 
 Declare species after "#"
-units in this demo are in nanometers and second
 name  radius  mass  diffusion-rate color initial-number
 
 #A 0.208 1 5e3 red 2000
-#B 0.3 1 1e2 blue 12000
-#C 0.1 1 10 cyan 0
+#B 0.101 17 1e2 blue 12000
+#C 0.154 18 1e2 cyan 0
 
 Please declare reactions you wish to simulate.
 Zeroth order reaction starts with a "z>"; unimolecular starts with a "u>", bimolecular reaction starts with "b>". No space after these prefix.
