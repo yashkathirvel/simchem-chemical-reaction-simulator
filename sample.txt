@@ -1,0 +1,24 @@
+Please set surface width, time step, generation of the simulation as well as canvas width, scaling factor, and sampling frequency of the gif.
+The parameters should be input as order above and separated by a space after "$" symbol.
+This sample provides a simulation of Lokta Volterra model.
+example: $400.0 0.01 1000 1 1000 10
+surface-width time-step generation scaling-factor canvas-width frequency
+$400.0 0.01 100 1 1000 10
+
+Please declare species (i.e. kinds of molecules) that involved in the simulation after "#" symbol.
+Avaliable colors: red,blue,green,yellow,pink,cyan
+If a species don't exist at beginning, please put zero at "initial-number"
+example: #A 3 1 500 red 100
+example: #B 3 1 500 blue 100
+name  radius  mass  diffusion-rate color initial-number
+#A 3 1 500 red 400
+#B 3 1 500 blue 400
+
+Please declare reactions you wish to simulate.
+Zeroth order reaction starts with a "z>"; unimolecular starts with a "u>", bimolecular reaction starts with "b>". No space after these prefix.
+if a single molecule vanishes after a reaction, just leave product blank
+example: u>A A A 2        #This means unimolecular reaction A->2A with a reaction-constant=2
+example: b>A B B B 40000  #This means bimolecular reaction A+B->2B with a reaction-constant=40000
+u>A A A 2
+u>B 2
+b>A B B B 40000

@@ -1,83 +1,60 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"gifhelper"
+	"os"
 	"time"
 )
 
 func main() {
+
+	collisionPtr := flag.Bool("c", false, "Check -c if you wish to carry out collision-driven simulation.")
+	if len(os.Args) < 3 {
+		panic("missing input/output name.")
+	}
+	fileName := os.Args[1]
+	outputName := os.Args[2]
+
+	// Parse the command-line flags.
+	flag.Parse()
+
 	// evolution parameters
-	numGens := 100
-	timeStep := 5.00
-
-
-	// construct Species types
-	A := &Species{
-		name:          "A",
-		diffusionRate: 2.0,
-		radius:        1,
-		red:           132,
-		green:         83,
-		blue:          60,
-	}
-
-	B := &Species{
-		name:          "B",
-		diffusionRate: 2.0,
-		radius:        1,
-		red:           255,
-		green:         0,
-		blue:          255,
-	}
-
-	diffusion_cons_A := A.diffusionRate
-	diffusion_cons_B := B.diffusionRate
-
+	surfaceWidth, timeStep, scalingFactor, numGens, canvasWidth, frequency, speciesMap, reactionMap := ReadParameters(fileName)
 	// initial Surface (for testing purposes)
-	initialSurface := &Surface{
-		A_particles: []*Particle{
-			{
-				position: OrderedPair{200, 200},
-				species:  A,
-			},
-		},
-		B_particles: []*Particle{
-			{
-				position: OrderedPair{150, 150},
-				species: B,
-			},
-		},
-		width: 400,
+	initialSurface := Surface{
+		width: surfaceWidth,
 	}
+	initialSurface.molecularMap = make(map[*Species][]*Particle, len(speciesMap))
 
-	for i := 0; i < 200; i++ {
-		A_p := Particle{
-			position: OrderedPair{200, 200},
-			species:  A,
-		}
-		B_p := Particle{
-			position: OrderedPair{150, 150},
-			species:  B,
-		}
-		initialSurface.A_particles = append(initialSurface.A_particles, &A_p)
-    initialSurface.B_particles = append(initialSurface.B_particles, &B_p)
+	initialSurface.Initialization(speciesMap)
 
-	}
-
+	//good parameters for L-V
+	//killRate := 2.0
+	//zerothRateConstant := 2.0
+	//bimolecularRateConstant := 40000.0
 	// DRIVER CODE (DO NOT CHANGE!!)
+	timePoints := make([]*Surface, numGens)
+	timePoints[0] = &initialSurface
 	startTime := time.Now()
-	timePoints := SimulateSurface(initialSurface, numGens, timeStep, diffusion_cons_A, diffusion_cons_B)
+	//if collision-driven flag is checked, run collision-driven simulation
+	if *collisionPtr {
+		//to be implemented
+		timePoints[0].SetInitialVelocity(timeStep)
+		timePoints = SimulateSurfaceCollision(timePoints, numGens, timeStep, reactionMap)
+	} else {
+		timePoints = SimulateSurface(timePoints, numGens, timeStep, reactionMap)
+	}
+	//timePoints := SimulateSurfaceCollision(initialSurface, numGens, timeStep, reactionMap)
 	elapsedTime := time.Since(startTime)
 
 	fmt.Println("Simulation took", elapsedTime, "s. Now drawing images.")
-	canvasWidth := 1000
-	frequency := 1
-	scalingFactor := 3.0
+
 	imageList := AnimateSystem(timePoints, canvasWidth, frequency, scalingFactor)
 
 	fmt.Println("Images drawn. Now generating GIF.")
-	gifhelper.ImagesToGIF(imageList, "simchem")
+	gifhelper.ImagesToGIF(imageList, outputName)
 	fmt.Println("GIF drawn.")
 	fmt.Println("Exiting normally.")
 }

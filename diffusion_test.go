@@ -1,10 +1,5 @@
 package main
 
-import (
-	"fmt"
-	"testing"
-)
-
 /**
 func TestSimulatorSurface(t *testing.T) {
 	numGens := 20
@@ -33,7 +28,7 @@ func TestSimulatorSurface(t *testing.T) {
 	fmt.Print("updated x:", timePoints[19].particles[0].x)
 }
 **/
-
+/**
 func TestDiffuse(t *testing.T) {
 	A := Species{
 		diffusionRate: 12.0,
@@ -53,3 +48,4 @@ func TestDiffuse(t *testing.T) {
 	fmt.Print(s.particles[0].position.x)
 	fmt.Print(s.particles[0].position.y)
 }
+**/
