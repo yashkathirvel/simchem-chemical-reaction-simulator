@@ -33,7 +33,7 @@ func (s *Surface) Update(timeStep float64, reactionMap map[string][]Reaction) *S
 		}
 	}
 	//reaction map recorded all zero,bimolecular and unimolecular reactions in a string-array map.
-
+	//simulating reactions in the order of zero-unimolecular-bimolecular.
 	if reactionMap["zero"] != nil && len(reactionMap["zero"]) != 0 { //handling zeroth order, i.e. adding particles
 		//range through all zeroth order reaction
 		for _, reaction := range reactionMap["zero"] {
@@ -63,11 +63,10 @@ func (s *Surface) Update(timeStep float64, reactionMap map[string][]Reaction) *S
 // input: reaction object
 // updates molecules on surface
 func (newS *Surface) ZerothOrder(reaction Reaction, timeStep float64) {
-	// initialize global pseudo random generator
+	// k0dt product molecules are formed during each time step.
 	number := reaction.reactionConstant * timeStep
-	//k0dt product molecules are formed during each time step.
+	// randomly place each particle
 	for i := 0; i < int(number); i++ {
-
 		newParticle := Particle{
 			position: OrderedPair{rand.Float64() * newS.width, rand.Float64() * newS.width},
 			species:  reaction.reactants[0],
@@ -173,11 +172,11 @@ func (newS *Surface) BimolecularReaction(reaction Reaction) {
 				//location of product to be added
 				new_dist := Average_pos(a_particle.position, b_particle.position)
 				new_distDictionary = append(new_distDictionary, new_dist)
+				//delete reactants as soon as reaction happens
 				newS.DeleteParticle(a_particle)
 				newS.DeleteParticle(b_particle)
-				flagsOfA[j] = true
+				flagsOfA[j] = true //making sure a pair of reaction happen no more than once
 				flagsOfB[i] = true
-				//newS.C_particles = append(newS.C_particles, &C_p)
 				continue
 			}
 		}
@@ -248,9 +247,10 @@ func (newS *Surface) UnimolecularReaction(reaction Reaction, timeStep float64) {
 	time.Sleep(time.Nanosecond)
 	rand.Seed(time.Now().UnixNano())
 	prob := 1.0 - math.Exp(-reaction.reactionConstant*timeStep)
+	//add new particles after reaction
 	new_distDictionary := make([]OrderedPair, 0)
 	for _, particle := range newS.molecularMap[reaction.reactants[0]] {
-		if rand.Float64() < prob {
+		if rand.Float64() < prob { //when reacction happens
 			new_distDictionary = append(new_distDictionary, particle.position)
 			newS.DeleteParticle(particle)
 		}

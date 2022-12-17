@@ -1,6 +1,7 @@
 # simchem-chemical-reaction-simulator
 This is the code repository for the chemical reaction simulator. The goal of this project is to implement a visualization of Andrew’s stochastic simulation of chemical reactions with spatial resolution and single molecule detail.
-
+link to demo:
+https://pfs-group-hq.slack.com/files/U045A3ZRPFY/F04FNJS68UT/code_demo.mp4
 ## usage
 
 An example of sample input can be found at sample.txt.

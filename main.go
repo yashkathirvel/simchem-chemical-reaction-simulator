@@ -38,6 +38,7 @@ func main() {
 	timePoints := make([]*Surface, numGens)
 	timePoints[0] = &initialSurface
 	startTime := time.Now()
+	//if collision-driven flag is checked, run collision-driven simulation
 	if *collisionPtr {
 		//to be implemented
 		timePoints[0].SetInitialVelocity(timeStep)

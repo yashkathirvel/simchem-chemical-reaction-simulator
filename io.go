@@ -13,9 +13,13 @@ func ReadParameters(filename string) (surfaceWidth, timeStep, scalingFactor floa
 	surfaceWidth = 200
 	timeStep = 1.0
 	generation = 10
+	//holds the input of initial number of all molecules
 	speciesList = make(map[*Species]int, 10)
+	//for reference in this function
 	speciesMap := make(map[string]*Species, 10)
+	//a map of "zero","uni","bi" and a slice of their corresponding reactions
 	reactionMap = make(map[string][]Reaction, 3)
+
 	file, err := os.Open(filename + ".txt")
 	if err != nil {
 		panic(err)
@@ -32,12 +36,12 @@ func ReadParameters(filename string) (surfaceWidth, timeStep, scalingFactor floa
 	for scanner.Scan() {
 		// Get the current line
 		line := scanner.Text()
-		//focus on lines with params only
+		//focus on lines with params only, skipping the rest
 		if !(strings.HasPrefix(line, "#") || strings.HasPrefix(line, "$") || strings.HasPrefix(line, "u>") || strings.HasPrefix(line, "b>") || strings.HasPrefix(line, "z>")) {
 			continue
 		}
 
-		// inital parameters
+		//global parameters
 		if strings.HasPrefix(line, "$") {
 			//eat prefix
 			line = line[1:]
@@ -99,6 +103,7 @@ func ReadParameters(filename string) (surfaceWidth, timeStep, scalingFactor floa
 			// Split the line on the delimiter
 			fields := strings.Split(line, " ")
 			R := ReadUniReaction(fields, speciesMap)
+			//store it in the map
 			reactionMap["uni"] = append(reactionMap["uni"], R)
 		}
 		if strings.HasPrefix(line, "b>") {
@@ -115,13 +120,12 @@ func ReadParameters(filename string) (surfaceWidth, timeStep, scalingFactor floa
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
-	//fmt.Println(speciesList)
-	//fmt.Println(speciesMap)
 	//surfaceWidth, timeStep, scalingFactor float64, generation, canvasWidth, frequency int, speciesList map[Species]int, reactionMap map[string][]Reaction
 	return surfaceWidth, timeStep, scalingFactor, generation, canvasWidth, frequency, speciesList, reactionMap
 }
 
 // Order: name  radius  mass  diffusion-rate color initial-number
+// returns The species object and how many of it
 func ReadSpecies(fields []string) (A Species, num int) {
 	var err error
 	A.name = fields[0]
@@ -146,6 +150,9 @@ func ReadSpecies(fields []string) (A Species, num int) {
 
 	return A, num
 }
+
+// input: the line descrbing reaction and the map of all species
+// output: reaction objects
 func ReadZeroReaction(fields []string, speciesMap map[string]*Species) Reaction {
 	var reaction Reaction
 	var err error
@@ -168,17 +175,18 @@ func ReadUniReaction(fields []string, speciesMap map[string]*Species) Reaction {
 			speciesName := fields[i]
 			reaction.products = append(reaction.products, speciesMap[speciesName])
 		}
-	}
+	} //otherwise it vanishes
 	reaction.reactionConstant, err = strconv.ParseFloat(fields[len(fields)-1], 64)
 	if err != nil {
 		panic("reaction constant of unimolecular reaction  is not a float64")
 	}
 	return reaction
 }
+
 func ReadBiReaction(fields []string, speciesMap map[string]*Species) Reaction {
 	var reaction Reaction
 	var err error
-	if len(fields) > 3 {
+	if len(fields) > 3 { //make sure it is a bimolecular reaction
 		AName := fields[0]
 		reaction.reactants = append(reaction.reactants, speciesMap[AName])
 		BName := fields[1]

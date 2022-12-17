@@ -3,7 +3,7 @@ The parameters should be input as order above and separated by a space after "$"
 This sample provides a simulation of Lokta Volterra model.
 example: $400.0 0.01 1000 1 1000 10
 surface-width time-step generation scaling-factor canvas-width frequency
-$400.0 0.01 1000 1 1000 10
+$400.0 0.01 100 1 1000 10
 
 Please declare species (i.e. kinds of molecules) that involved in the simulation after "#" symbol.
 Avaliable colors: red,blue,green,yellow,pink,cyan

@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// basically same as non-collision version, except for velocity is randomly arranged
 func SimulateSurfaceCollision(timePoints []*Surface, numGens int, timeStep float64, reactionMap map[string][]Reaction) []*Surface {
 
 	//fmt.Print(initialS.A_particles[50].velocity)
