@@ -140,7 +140,8 @@ func ReadSpecies(fields []string) (A Species, num int) {
 	A.color = fields[4]
 	num, err = strconv.Atoi(fields[5])
 	if err != nil {
-		panic("number of molecules is not an int")
+		num = 0
+		//panic("number of molecules is not an int")
 	}
 
 	return A, num

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"sort"
@@ -17,11 +18,8 @@ func SimulateSurface(timePoints []*Surface, numGens int, timeStep float64, react
 	for i := 1; i < numGens; i++ {
 		timePoints[i] = timePoints[i-1].Update(timeStep, reactionMap)
 		time.Sleep(time.Nanosecond)
-		/**for testing purpose
-		for _, particles := range timePoints[i].molecularMap {
-			fmt.Print(len(particles), ",")
-		}
-		fmt.Println()**/
+		//for testing purpose
+		fmt.Println(len(timePoints[i].molecularMap[reactionMap["bi"][0].reactants[0]]), ",", len(timePoints[i].molecularMap[reactionMap["bi"][0].reactants[1]]), ",")
 	}
 	return timePoints
 }
@@ -47,6 +45,12 @@ func (s *Surface) Update(timeStep float64, reactionMap map[string][]Reaction) *S
 			newS.ZerothOrder(reaction, timeStep)
 		}
 	}
+	if reactionMap["bi"] != nil && len(reactionMap["bi"]) != 0 { //handling bimolecular order,
+		for _, reaction := range reactionMap["bi"] {
+			newS.BimolecularReaction(reaction)
+			//fmt.Println("ith bi reaction", i, "name", reaction.reactants[0].name, "num", len(newS.molecularMap[reaction.reactants[0]]), "name", reaction.reactants[1].name, "num", len(newS.molecularMap[reaction.reactants[1]]))
+		}
+	}
 	if reactionMap["uni"] != nil && len(reactionMap["uni"]) != 0 { //handling uni order
 		for _, reaction := range reactionMap["uni"] {
 			if len(reaction.products) == 0 {
@@ -55,12 +59,6 @@ func (s *Surface) Update(timeStep float64, reactionMap map[string][]Reaction) *S
 				newS.UnimolecularReaction(reaction, timeStep) //uni that has products
 			}
 			//fmt.Println("ith uni reaction", i, "name", reaction.reactants[0].name, "num", len(newS.molecularMap[reaction.reactants[0]]))
-		}
-	}
-	if reactionMap["bi"] != nil && len(reactionMap["bi"]) != 0 { //handling bimolecular order,
-		for _, reaction := range reactionMap["bi"] {
-			newS.BimolecularReaction(reaction)
-			//fmt.Println("ith bi reaction", i, "name", reaction.reactants[0].name, "num", len(newS.molecularMap[reaction.reactants[0]]), "name", reaction.reactants[1].name, "num", len(newS.molecularMap[reaction.reactants[1]]))
 		}
 	}
 	return newS
@@ -144,7 +142,7 @@ func (p *Particle) SurfaceReaction(width float64) {
 func (newS *Surface) BimolecularReaction(reaction Reaction) {
 	//kSi = 4πDσb.
 	binding_radius := reaction.reactionConstant / (4 * math.Pi * (reaction.reactants[0].diffusionRate + reaction.reactants[1].diffusionRate))
-
+	//fmt.Println("radius:", binding_radius, reaction.reactants[0].name, reaction.reactants[0].diffusionRate, reaction.reactants[1].name, reaction.reactants[1].diffusionRate)
 	new_distDictionary := make([]OrderedPair, 0)
 
 	//making sure each pair of reactants just collide for 1 time

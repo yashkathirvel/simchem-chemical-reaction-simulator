@@ -7,7 +7,7 @@ import (
 
 func (p *Particle) Diffuse(timeStep float64) {
 	std := math.Sqrt(2 * timeStep * p.species.diffusionRate)
-	//fmt.Println(p.species.diffusionRate, "std:", std)
+
 	dx := rand.NormFloat64() * std
 	dy := rand.NormFloat64() * std
 	p.position.x += dx
