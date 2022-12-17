@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"math/rand"
+	"time"
 )
 
 func (p *Particle) Diffuse(timeStep float64) {
@@ -15,9 +16,8 @@ func (p *Particle) Diffuse(timeStep float64) {
 	//runing too fast that seeds being the same?
 }
 
-/**
 // calling BrownianMotion() to all particles in parallel
-func (p *Particle) Diffuse(timeStep float64) {
+func (p *Particle) DiffuseSlow(timeStep float64) {
 	//allocate a new PRNG objec for every object
 	source := rand.NewSource(time.Now().UnixNano())
 	generator := rand.New(source)
@@ -36,4 +36,4 @@ func (p *Particle) BrownianMotion(generator *rand.Rand, std float64) {
 	p.position.x += dx
 	p.position.y += dy
 	//probably need to handle off boundary senario
-}**/
+}

@@ -1,34 +1,30 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"sort"
 	"time"
 )
 
+// top level function
 func SimulateSurface(timePoints []*Surface, numGens int, timeStep float64, reactionMap map[string][]Reaction) []*Surface {
-	//timePoints := make([]*Surface, numGens)
-	// set the initial Surface object as the first time point
-	//timePoints[0] = &initialSurface
-	// iterate through numGens generations and update the Surface object each time.
-	//dataA := make([]int, 0)
-	//dataB := make([]int, 0)
+
 	for i := 1; i < numGens; i++ {
 		timePoints[i] = timePoints[i-1].Update(timeStep, reactionMap)
+		//generate a different PRNG object
 		time.Sleep(time.Nanosecond)
 		//for testing purpose
-		fmt.Println(len(timePoints[i].molecularMap[reactionMap["bi"][0].reactants[0]]), ",", len(timePoints[i].molecularMap[reactionMap["bi"][0].reactants[1]]), ",")
+		//fmt.Println(len(timePoints[i].molecularMap[reactionMap["bi"][0].reactants[0]]), ",", len(timePoints[i].molecularMap[reactionMap["bi"][0].reactants[1]]), ",")
 	}
 	return timePoints
 }
 
-// Surface method: Update()
 // Updates the Surface object given a time s
 func (s *Surface) Update(timeStep float64, reactionMap map[string][]Reaction) *Surface {
 	// create a copy of the current Surface object
 	newS := s.Copy()
+	//reset PRNG before diffusion
 	rand.Seed(time.Now().UnixNano())
 	// iterate through the particles on the surface and diffuse them
 	for _, particles := range newS.molecularMap {
@@ -36,19 +32,12 @@ func (s *Surface) Update(timeStep float64, reactionMap map[string][]Reaction) *S
 			p.Diffuse(timeStep)
 		}
 	}
+	//reaction map recorded all zero,bimolecular and unimolecular reactions in a string-array map.
 
-	//newS.LoktaVolterraReaction(bimolecularRateConstant, diffusion_cons_A, diffusion_cons_B)
-	//newS.AddAParticles(zerothRateConstant, timeStep)
-	//newS.KillParticles(killRate, timeStep)
-	if reactionMap["zero"] != nil && len(reactionMap["zero"]) != 0 { //handling zeroth order, i.e. adding
+	if reactionMap["zero"] != nil && len(reactionMap["zero"]) != 0 { //handling zeroth order, i.e. adding particles
+		//range through all zeroth order reaction
 		for _, reaction := range reactionMap["zero"] {
 			newS.ZerothOrder(reaction, timeStep)
-		}
-	}
-	if reactionMap["bi"] != nil && len(reactionMap["bi"]) != 0 { //handling bimolecular order,
-		for _, reaction := range reactionMap["bi"] {
-			newS.BimolecularReaction(reaction)
-			//fmt.Println("ith bi reaction", i, "name", reaction.reactants[0].name, "num", len(newS.molecularMap[reaction.reactants[0]]), "name", reaction.reactants[1].name, "num", len(newS.molecularMap[reaction.reactants[1]]))
 		}
 	}
 	if reactionMap["uni"] != nil && len(reactionMap["uni"]) != 0 { //handling uni order
@@ -61,9 +50,18 @@ func (s *Surface) Update(timeStep float64, reactionMap map[string][]Reaction) *S
 			//fmt.Println("ith uni reaction", i, "name", reaction.reactants[0].name, "num", len(newS.molecularMap[reaction.reactants[0]]))
 		}
 	}
+	if reactionMap["bi"] != nil && len(reactionMap["bi"]) != 0 { //handling bimolecular order,
+		for _, reaction := range reactionMap["bi"] {
+			newS.BimolecularReaction(reaction)
+			//fmt.Println("ith bi reaction", i, "name", reaction.reactants[0].name, "num", len(newS.molecularMap[reaction.reactants[0]]), "name", reaction.reactants[1].name, "num", len(newS.molecularMap[reaction.reactants[1]]))
+		}
+	}
 	return newS
 }
 
+// ZerothOrder reaction
+// input: reaction object
+// updates molecules on surface
 func (newS *Surface) ZerothOrder(reaction Reaction, timeStep float64) {
 	// initialize global pseudo random generator
 	number := reaction.reactionConstant * timeStep
@@ -75,6 +73,24 @@ func (newS *Surface) ZerothOrder(reaction Reaction, timeStep float64) {
 			species:  reaction.reactants[0],
 		}
 		newS.molecularMap[newParticle.species] = append(newS.molecularMap[newParticle.species], &newParticle)
+	}
+}
+
+// Adding user designated input to the surface
+// input: user designated species-number map
+// no output
+func (s Surface) Initialization(speciesList map[*Species]int) {
+	//random placement
+	for species, number := range speciesList {
+
+		for i := 0; i < number; i++ {
+			p := &Particle{
+				//position is randomly set
+				position: OrderedPair{rand.Float64() * s.width, rand.Float64() * s.width},
+				species:  species,
+			}
+			s.molecularMap[species] = append(s.molecularMap[species], p)
+		}
 	}
 }
 func (newS *Surface) DeleteParticle(a *Particle) {
@@ -250,3 +266,40 @@ func (newS *Surface) UnimolecularReaction(reaction Reaction, timeStep float64) {
 		}
 	}
 }
+
+/**
+func (newS *Surface) LoktaVolterraReaction(rateConstant, diffusion_cons_A, diffusion_cons_B float64) {
+	//kSi = 4πDσb.
+	binding_radius := rateConstant / (4 * math.Pi * (diffusion_cons_A + diffusion_cons_B))
+	B := &Species{
+		name:          "B",
+		diffusionRate: 100.0,
+		radius:        3,
+		red:           0,
+		green:         0,
+		blue:          255,
+		mass:          1.0,
+	}
+	newB := make([]OrderedPair, 0)
+	//range through a and compare it's distance with the B particles
+	//if the distance between them is less than the binding radius, make C_particles
+	for _, b_particle := range newS.B_particles {
+		for _, a_particle := range newS.A_particles {
+			particle_dist := Distance(a_particle.position, b_particle.position)
+			if particle_dist < binding_radius {
+				new_dist := Average_pos(a_particle.position, b_particle.position)
+				newB = append(newB, new_dist)
+				newS.DeleteParticleA(a_particle)
+			}
+		}
+	}
+
+	for _, b_position := range newB {
+		B_p := Particle{
+			position: b_position,
+			species:  B, //pointer to a species defined in main
+		}
+		newS.B_particles = append(newS.B_particles, &B_p)
+	}
+}
+**/

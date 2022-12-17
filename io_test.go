@@ -6,7 +6,7 @@ import (
 )
 
 func TestReadParameters(t *testing.T) {
-	surfaceWidth, timeStep, canvasWidth, scalingFactor, generation, frequency, speciesList, reactionMap := ReadParameters("input")
+	surfaceWidth, timeStep, canvasWidth, scalingFactor, generation, frequency, speciesList, reactionMap := ReadParameters("sample")
 	fmt.Println(surfaceWidth)
 	fmt.Println(timeStep)
 	fmt.Println(canvasWidth)

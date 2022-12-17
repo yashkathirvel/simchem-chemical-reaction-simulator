@@ -40,8 +40,8 @@ func main() {
 	startTime := time.Now()
 	if *collisionPtr {
 		//to be implemented
-		//timePoints[0].SetInitialVelocity(timeStep)
-		//timePoints = SimulateSurfaceCollision(initialSurface, numGens, timeStep, reactionMap)
+		timePoints[0].SetInitialVelocity(timeStep)
+		timePoints = SimulateSurfaceCollision(timePoints, numGens, timeStep, reactionMap)
 	} else {
 		timePoints = SimulateSurface(timePoints, numGens, timeStep, reactionMap)
 	}
